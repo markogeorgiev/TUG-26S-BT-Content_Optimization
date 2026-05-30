@@ -1,0 +1,4 @@
+output/wikipedia-pets*
+data/
+.venv/
+__pycache__
