@@ -20,6 +20,10 @@
     - Here I refer to combining all three retrievers into a single callable script agains a query supplied as argument/parameter. 
     - Ideally this script will resemble an API.
 
+## Content Charateristics
+
+0. Figure out which charateristics of content to track. 
+
 
 
 X. Compile an initiall selection of queries which will be used to create content rankings. 
