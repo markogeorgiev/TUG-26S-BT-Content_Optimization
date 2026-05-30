@@ -1,0 +1,66 @@
+<div class="results-card">
+  <div class="results-header">
+    <div>
+      <p class="section-label">Results</p>
+      <h2>Stored Ranking Preview</h2>
+    </div>
+    {% if query_record %}
+      <a class="download-link" href="{{ url_for('download_query_results', query_id=query_record.query_id) }}">
+        Download parquet
+      </a>
+    {% endif %}
+  </div>
+
+  {% if results %}
+    <div class="table-wrap">
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Title</th>
+            <th>Hybrid</th>
+            <th>BM25</th>
+            <th>Semantic</th>
+            <th>PageRank</th>
+            <th>Page ID</th>
+            <th>Matched Query Tokens</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in results %}
+            <tr>
+              <td>{{ row.rank }}</td>
+              <td>
+                <div class="title-cell">
+                  {% if row.article_url %}
+                    <a
+                      class="title-link"
+                      href="{{ row.article_url }}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {{ row.title }}
+                    </a>
+                  {% else %}
+                    <strong>{{ row.title }}</strong>
+                  {% endif %}
+                  <span>{{ row.file_name }}</span>
+                </div>
+              </td>
+              <td>{{ '%.6f'|format(row.hybrid_score) }}</td>
+              <td>{{ '%.4f'|format(row.bm25_score_norm) }}</td>
+              <td>{{ '%.4f'|format(row.semantic_score_norm) }}</td>
+              <td>{{ '%.4f'|format(row.pagerank_norm) }}</td>
+              <td>{{ row.page_id }}</td>
+              <td>{{ row.matched_query_tokens or 'None' }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <p>No ranking selected yet. Run a query or pick a previous one from the sidebar.</p>
+    </div>
+  {% endif %}
+</div>

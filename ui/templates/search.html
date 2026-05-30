@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Hybrid Query UI{% endblock %}
+
+{% block content %}
+  <main class="layout">
+    <aside class="sidebar">
+      <section class="panel">
+        <p class="section-label">Search Settings</p>
+        <form class="search-form" action="{{ url_for('search') }}" method="post" data-search-form>
+          <label class="field-label" for="query-input">Query</label>
+          <div class="query-box">
+            <input
+              id="query-input"
+              name="query"
+              type="text"
+              value="{{ current_query }}"
+              placeholder="Search the pets corpus..."
+              autocomplete="off"
+              spellcheck="false"
+              data-query-input
+              data-suggestions-url="{{ url_for('query_suggestions') }}"
+            >
+            <div class="suggestions" hidden data-suggestions></div>
+          </div>
+
+          <label class="field-label" for="display-limit">Results to display</label>
+          <select id="display-limit" name="display_limit" data-display-limit-select>
+            {% for option in display_options %}
+              <option value="{{ option }}" {% if option|string == selected_display_value %}selected{% endif %}>
+                Top {{ option }}
+              </option>
+            {% endfor %}
+            <option value="custom" {% if selected_display_value == 'custom' %}selected{% endif %}>
+              Other
+            </option>
+          </select>
+          <div class="custom-limit-box{% if selected_display_value != 'custom' %} is-hidden{% endif %}" data-custom-limit-box>
+            <label class="field-label" for="display-limit-custom">Custom k</label>
+            <input
+              id="display-limit-custom"
+              name="display_limit_custom"
+              type="number"
+              min="1"
+              step="1"
+              value="{{ custom_display_limit }}"
+              placeholder="Enter any positive k"
+            >
+          </div>
+
+          <button type="submit" class="submit-button" data-submit-button>
+            Run query
+          </button>
+          <p class="helper-text">
+            Existing queries reuse their saved file from <code>rankings/initial_rankings</code>. New queries are computed once and then become reusable.
+          </p>
+        </form>
+      </section>
+
+      <section class="panel">
+        <p class="section-label">Previous Queries</p>
+        <div class="history-list">
+          {% for item in recent_queries %}
+            <a class="history-item" href="{{ url_for('query_results', query_id=item.query_id, display=display_limit or 25) }}">
+              <strong>{{ item.query_text }}</strong>
+              <span>{{ item.query_id }} | {{ item.stored_result_count }} rows{% if not item.is_full_ranking %} | partial{% endif %}</span>
+            </a>
+          {% else %}
+            <p class="helper-text">No query history yet.</p>
+          {% endfor %}
+        </div>
+      </section>
+    </aside>
+
+    <section class="workspace">
+      {% if error_message %}
+        <div class="status-banner error">{{ error_message }}</div>
+      {% endif %}
+
+      {% if query_record %}
+        <section class="summary-grid">
+          <article class="summary-card">
+            <p class="section-label">Selected Query</p>
+            <h2>{{ query_record.query_text }}</h2>
+            <p class="summary-meta">{{ query_record.query_id }} | {{ total_results }} stored rows</p>
+          </article>
+          <article class="summary-card">
+            <p class="section-label">Storage</p>
+            <h2>{{ 'Full ranking' if query_record.is_full_ranking else 'Partial ranking' }}</h2>
+            <p class="summary-meta">{{ query_record.result_file }}</p>
+          </article>
+          <article class="summary-card">
+            <p class="section-label">Execution Mode</p>
+            {% if created_state == 'created' %}
+              <h2>Fresh ranking saved</h2>
+              <p class="summary-meta">This query was new and has now been added to the history.</p>
+            {% elif created_state == 'reused' %}
+              <h2>Existing ranking reused</h2>
+              <p class="summary-meta">No duplicate execution happened for this query.</p>
+            {% else %}
+              <h2>Stored ranking loaded</h2>
+              <p class="summary-meta">You are viewing results directly from the saved parquet file.</p>
+            {% endif %}
+          </article>
+        </section>
+
+        {% if not query_record.is_full_ranking %}
+          <div class="status-banner warning">
+            This query was stored before the full-ranking rule was enabled, so only a partial result set is currently available for it.
+          </div>
+        {% endif %}
+      {% endif %}
+
+      {% include "partials/results_table.html" %}
+    </section>
+  </main>
+{% endblock %}

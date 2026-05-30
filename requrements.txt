@@ -4,5 +4,10 @@ FlagEmbedding
 spacy 
 pandas 
 numpy
+pyarrow
+rank-bm25
+tqdm
+sentence-transformers
+Flask
 rank_bm25
 sentence_transformers

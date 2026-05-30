@@ -6,3 +6,4 @@ __pycache__
 .npy
 .parquet
 .pkl
+rankings/
