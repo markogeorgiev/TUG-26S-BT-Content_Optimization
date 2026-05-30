@@ -2,3 +2,6 @@ output/wikipedia-pets*
 data/
 .venv/
 __pycache__
+*.zip
+.npy
+.parquet
