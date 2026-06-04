@@ -10,6 +10,12 @@ if str(PROJECT_ROOT) not in sys.path:
 from flask import Flask, abort, jsonify, redirect, render_template, request, send_file, url_for
 
 from retriever import run_hybrid_rankings as ranking_backend
+from ui.services.feature_ui_service import (
+    content_feature_document_count,
+    get_article_features,
+    resolve_article,
+    search_articles,
+)
 from ui.services.ranking_ui_service import (
     DEFAULT_DISPLAY_LIMIT,
     available_display_limits,
@@ -38,6 +44,26 @@ def _display_selection_state(display_limit: int, display_options: list[int]) -> 
 def create_app() -> Flask:
     app = Flask(__name__, template_folder="templates", static_folder="static")
     app.config["TEMPLATES_AUTO_RELOAD"] = True
+
+    def render_article_features_page(
+        *,
+        article: dict | None = None,
+        article_search: str = "",
+        error_message: str = "",
+    ):
+        try:
+            feature_document_count = content_feature_document_count()
+        except (FileNotFoundError, ValueError) as exc:
+            feature_document_count = 0
+            error_message = error_message or str(exc)
+
+        return render_template(
+            "features_article.html",
+            article=article,
+            article_search=article_search,
+            feature_document_count=feature_document_count,
+            error_message=error_message,
+        )
 
     @app.get("/")
     def index():
@@ -121,6 +147,71 @@ def create_app() -> Flask:
         except ValueError:
             limit = 8
         return jsonify({"suggestions": autocomplete_queries(prefix, limit=limit)})
+
+    @app.get("/features")
+    def features():
+        return redirect(url_for("article_features"))
+
+    @app.get("/features/articles")
+    def article_features():
+        article_search = request.args.get("article", "").strip()
+        if not article_search:
+            return render_article_features_page()
+
+        try:
+            article_match = resolve_article(article_search)
+        except (FileNotFoundError, ValueError) as exc:
+            return render_article_features_page(
+                article_search=article_search,
+                error_message=str(exc),
+            )
+
+        if article_match is None:
+            return render_article_features_page(
+                article_search=article_search,
+                error_message=f'No article matched "{article_search}".',
+            )
+        return redirect(
+            url_for(
+                "article_feature_detail",
+                page_id=article_match["page_id"],
+            )
+        )
+
+    @app.get("/features/articles/<int:page_id>")
+    def article_feature_detail(page_id: int):
+        try:
+            article = get_article_features(page_id)
+        except FileNotFoundError:
+            abort(404)
+        except ValueError as exc:
+            return render_article_features_page(error_message=str(exc))
+
+        return render_article_features_page(
+            article=article,
+            article_search=str(article["title"]),
+        )
+
+    @app.get("/api/article-suggestions")
+    def article_suggestions():
+        search_text = request.args.get("q", "")
+        limit_raw = request.args.get("limit", "10")
+        try:
+            limit = max(0, min(int(limit_raw), 20))
+        except ValueError:
+            limit = 10
+
+        try:
+            suggestions = search_articles(search_text, limit=limit)
+        except (FileNotFoundError, ValueError):
+            suggestions = []
+
+        for suggestion in suggestions:
+            suggestion["url"] = url_for(
+                "article_feature_detail",
+                page_id=suggestion["page_id"],
+            )
+        return jsonify({"suggestions": suggestions})
 
     @app.get("/queries/<query_id>/download")
     def download_query_results(query_id: str):

@@ -8,17 +8,34 @@
   </head>
   <body>
     <div class="shell">
-      <header class="topbar">
-        <div>
-          <p class="eyebrow">Wikipedia Pets</p>
-          <h1>Hybrid Retrieval Workspace</h1>
+      <header class="site-header">
+        <div class="topbar">
+          <div>
+            <p class="eyebrow">Wikipedia Pets</p>
+            <h1>Content Optimization Workspace</h1>
+          </div>
+          <p class="topbar-note">
+            {% block topbar_note %}BM25 0.4 + MiniLM 0.4 + PageRank 0.2{% endblock %}
+          </p>
         </div>
-        <p class="topbar-note">
-          BM25 0.4 + MiniLM 0.4 + PageRank 0.2
-        </p>
+        <nav class="primary-nav" aria-label="Primary navigation">
+          <a
+            class="primary-nav-link{% if request.endpoint in ['index', 'search', 'query_results', 'download_query_results'] %} is-active{% endif %}"
+            href="{{ url_for('index') }}"
+          >
+            Query
+          </a>
+          <a
+            class="primary-nav-link{% if request.endpoint in ['features', 'article_features', 'article_feature_detail', 'article_suggestions'] %} is-active{% endif %}"
+            href="{{ url_for('features') }}"
+          >
+            Features
+          </a>
+        </nav>
       </header>
       {% block content %}{% endblock %}
     </div>
     <script src="{{ url_for('static', filename='js/search.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/features.js') }}" defer></script>
   </body>
 </html>

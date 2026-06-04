@@ -192,6 +192,78 @@
         "remaining_chunks_mean": 0.05
       },
       "result_file": "rankings\\initial_rankings\\q000008_easy-to-manage-parrots.parquet"
+    },
+    {
+      "query_id": "q000009",
+      "query_text": "most beautiful dog ever",
+      "query_key": "most beautiful dog ever",
+      "query_slug": "most-beautiful-dog-ever",
+      "executed_at_utc": "2026-06-04T20:52:48Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000009_most-beautiful-dog-ever.parquet"
+    },
+    {
+      "query_id": "q000010",
+      "query_text": "Do all dogs need to go on a walk everyday?",
+      "query_key": "do all dogs need to go on a walk everyday",
+      "query_slug": "do-all-dogs-need-to-go-on-a-walk-everyday",
+      "executed_at_utc": "2026-06-04T20:54:20Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000010_do-all-dogs-need-to-go-on-a-walk-everyday.parquet"
+    },
+    {
+      "query_id": "q000011",
+      "query_text": "dog with brown fur",
+      "query_key": "dog with brown fur",
+      "query_slug": "dog-with-brown-fur",
+      "executed_at_utc": "2026-06-04T20:55:51Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000011_dog-with-brown-fur.parquet"
     }
   ]
 }

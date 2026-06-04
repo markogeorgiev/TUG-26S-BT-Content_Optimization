@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Article Content Features{% endblock %}
+
+{% block topbar_note %}Article-level content diagnostics{% endblock %}
+
+{% block content %}
+  <main class="page-stack">
+    <section class="feature-section-header">
+      <div>
+        <p class="section-label">Features</p>
+        <h2>Content Feature Analysis</h2>
+      </div>
+      <nav class="secondary-nav" aria-label="Features navigation">
+        <a class="secondary-nav-link is-active" href="{{ url_for('article_features') }}">
+          Show Article Level Features
+        </a>
+      </nav>
+    </section>
+
+    <section class="panel search-panel">
+      <div class="search-panel-header">
+        <div>
+          <p class="section-label">Features &gt; Show Article Level Features</p>
+          <h2>Find An Article</h2>
+        </div>
+        <p class="helper-text search-panel-note">
+          Search {{ '{:,}'.format(feature_document_count) }} analyzed articles by Wikipedia page ID or article name.
+        </p>
+      </div>
+
+      <form class="article-search-form" action="{{ url_for('article_features') }}" method="get" data-article-search-form>
+        <div class="search-grid article-search-grid">
+          <div class="search-field search-field-query">
+            <label class="field-label" for="article-input">Page ID or article name</label>
+            <div class="query-box">
+              <input
+                id="article-input"
+                name="article"
+                type="text"
+                value="{{ article_search }}"
+                placeholder="Search for Golden Retriever or 7590101..."
+                autocomplete="off"
+                spellcheck="false"
+                data-article-input
+                data-suggestions-url="{{ url_for('article_suggestions') }}"
+              >
+              <div class="suggestions" hidden data-article-suggestions></div>
+            </div>
+          </div>
+          <div class="search-field search-field-action">
+            <button type="submit" class="submit-button" data-article-submit-button>
+              Show features
+            </button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    {% if error_message %}
+      <div class="status-banner error">{{ error_message }}</div>
+    {% endif %}
+
+    {% if article %}
+      <section class="article-feature-hero">
+        <div>
+          <p class="section-label">Selected Article</p>
+          <h2>{{ article.title }}</h2>
+          <p class="summary-meta">
+            Page ID {{ article.page_id }} | Feature document ID {{ article.feature_doc_id }}
+          </p>
+        </div>
+        <div class="article-feature-actions">
+          {% if article.article_url %}
+            <a
+              class="download-link"
+              href="{{ article.article_url }}"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Open Wikipedia article
+            </a>
+          {% endif %}
+        </div>
+      </section>
+
+      <section class="feature-meta-strip">
+        <div>
+          <span class="feature-meta-label">Source path</span>
+          <code>{{ article.source_path }}</code>
+        </div>
+        <div>
+          <span class="feature-meta-label">Corpus file</span>
+          <code>{{ article.file_name }}</code>
+        </div>
+      </section>
+
+      <section class="feature-group-grid">
+        {% for group in article.metric_groups %}
+          <article class="feature-group-card">
+            <p class="section-label">{{ group.title }}</p>
+            <div class="feature-metric-list">
+              {% for metric in group.metrics %}
+                <div class="feature-metric">
+                  <span>{{ metric.label }}</span>
+                  <strong>
+                    {% if metric.value is none %}
+                      Not available
+                    {% elif metric.format == 'integer' %}
+                      {{ '{:,}'.format(metric.value|int) }}
+                    {% else %}
+                      {{ '%.4f'|format(metric.value) }}
+                    {% endif %}
+                  </strong>
+                </div>
+              {% endfor %}
+            </div>
+          </article>
+        {% endfor %}
+      </section>
+
+      <section class="results-card entity-card">
+        <div class="results-header">
+          <div>
+            <p class="section-label">Linguistic Features</p>
+            <h2>Top Entities</h2>
+            <p class="helper-text">
+              {{ '{:,}'.format(article.entity_count|int) }} occurrences across
+              {{ '{:,}'.format(article.unique_entity_count|int) }} unique labeled entities.
+            </p>
+          </div>
+        </div>
+
+        {% if article.top_entities %}
+          <div class="entity-chip-list">
+            {% for entity in article.top_entities %}
+              <span class="entity-chip">
+                <strong>{{ entity.entity }}</strong>
+                <small>{{ entity.label }} | {{ entity.count }}</small>
+              </span>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="helper-text">No repeated entities were stored for this article.</p>
+        {% endif %}
+
+        <details class="entity-details">
+          <summary>Show all detected entities</summary>
+          {% if article.entities %}
+            <div class="table-wrap">
+              <table class="results-table entity-table">
+                <thead>
+                  <tr>
+                    <th>Entity</th>
+                    <th>Label</th>
+                    <th>Count</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for entity in article.entities %}
+                    <tr>
+                      <td>{{ entity.entity }}</td>
+                      <td>{{ entity.label }}</td>
+                      <td>{{ entity.count }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="helper-text">No entities were detected.</p>
+          {% endif %}
+        </details>
+      </section>
+    {% else %}
+      <section class="results-card">
+        <div class="empty-state feature-empty-state">
+          <p class="section-label">Article Level Features</p>
+          <h2>Select an article to inspect its content metrics.</h2>
+          <p>
+            The feature table includes document size, lexical statistics, readability,
+            sentiment, and labeled entities from <code>data/content_features/</code>.
+          </p>
+        </div>
+      </section>
+    {% endif %}
+  </main>
+{% endblock %}

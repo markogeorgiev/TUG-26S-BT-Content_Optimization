@@ -8,7 +8,7 @@ This repository builds a retrieval corpus from Wikipedia's `Category:Pets` graph
 - BM25 document indexing
 - MiniLM-based semantic retrieval
 - hybrid document ranking
-- a Flask/Jinja web UI for querying the corpus
+- a Flask/Jinja web UI for querying the corpus and inspecting article-level content features
 
 The current system behaves like a document search engine, not a chunk search engine. Chunk embeddings are used only to help score full documents.
 
@@ -257,6 +257,7 @@ The app runs on:
 
 Current UI behavior:
 
+- header navigation between the Query and Features areas
 - search bar above the results area
 - autocomplete suggestions sourced from `rankings/queries.json`
 - new queries are executed once and then reused
@@ -264,6 +265,8 @@ Current UI behavior:
 - client-side sorting by results-table column
 - Wikipedia article links open in a new tab
 - saved parquet download for the currently selected query
+- article-level feature search by Wikipedia page ID or article name
+- article feature display sourced from `data/content_features/`
 
 ## Retrieval Design
 
