@@ -60,8 +60,14 @@
 ## III. Web UI v1
 
 1. The UI should allow me to execute arbitrary queries and get results based on PageRank, BM25 and SBERT (Based on I.2.)
+    - Implement this s.t. we store all executed queries in rankings\queries.json. 
+    - Actual rankings are stored in rankings\initial_rankings\[query_id]_[query_slug], where the query slug is based on the actual query. 
+    - Then I need to figure out some queries to execute in order to have a good collection which we can model. 
 2. The WebUI should display statistics of content on a per content level (defined in III). 
-3. Display averaged content charateristics based on top-k results from queries defined in section I.5.
+3. Research some data visualization techinque to model how ranking changes with relation to a feature.
+    - Regular For example, Rank 1 has short sentences, Rank 20 longer, Rank 120 even longer.
+    - A consideration is that we expect differnt articles that both rank higher to have very different values for a single metric. 
+        - This means tha for example different articles ranking 1 for different queires may have very different number of words, and we need to find a way to model this. So we are interested in modeling actuall correlaion as opposed to coincidence. 
 
 
 ## IV. Analysis of Ranking 

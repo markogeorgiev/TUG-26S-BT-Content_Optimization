@@ -4,6 +4,4 @@ data/
 __pycache__
 *.zip
 .npy
-.parquet
 .pkl
-rankings/

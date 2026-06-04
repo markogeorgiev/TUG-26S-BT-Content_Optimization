@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "queries": [
+    {
+      "query_id": "q000001",
+      "query_text": "Are birds good pets?",
+      "query_key": "are birds good pets",
+      "query_slug": "are-birds-good-pets",
+      "executed_at_utc": "2026-05-30T18:22:32Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000001_are-birds-good-pets.parquet"
+    },
+    {
+      "query_id": "q000002",
+      "query_text": "Best dogs for small apartments",
+      "query_key": "best dogs for small apartments",
+      "query_slug": "best-dogs-for-small-apartments",
+      "executed_at_utc": "2026-06-04T16:17:34Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000002_best-dogs-for-small-apartments.parquet"
+    },
+    {
+      "query_id": "q000003",
+      "query_text": "The most popular orange cat",
+      "query_key": "the most popular orange cat",
+      "query_slug": "the-most-popular-orange-cat",
+      "executed_at_utc": "2026-06-04T16:18:08Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000003_the-most-popular-orange-cat.parquet"
+    },
+    {
+      "query_id": "q000004",
+      "query_text": "Low maintenance pets for beginners",
+      "query_key": "low maintenance pets for beginners",
+      "query_slug": "low-maintenance-pets-for-beginners",
+      "executed_at_utc": "2026-06-04T16:23:07Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000004_low-maintenance-pets-for-beginners.parquet"
+    },
+    {
+      "query_id": "q000005",
+      "query_text": "What should you feed a chameleon",
+      "query_key": "what should you feed a chameleon",
+      "query_slug": "what-should-you-feed-a-chameleon",
+      "executed_at_utc": "2026-06-04T17:28:20Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000005_what-should-you-feed-a-chameleon.parquet"
+    },
+    {
+      "query_id": "q000006",
+      "query_text": "Can you keep a fish as a pet?",
+      "query_key": "can you keep a fish as a pet",
+      "query_slug": "can-you-keep-a-fish-as-a-pet",
+      "executed_at_utc": "2026-06-04T17:41:21Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000006_can-you-keep-a-fish-as-a-pet.parquet"
+    },
+    {
+      "query_id": "q000007",
+      "query_text": "The most common lizard that people keep as a pet",
+      "query_key": "the most common lizard that people keep as a pet",
+      "query_slug": "the-most-common-lizard-that-people-keep-as-a-pet",
+      "executed_at_utc": "2026-06-04T19:55:09Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000007_the-most-common-lizard-that-people-keep-as-a-pet.parquet"
+    },
+    {
+      "query_id": "q000008",
+      "query_text": "Easy to manage parrots",
+      "query_key": "easy to manage parrots",
+      "query_slug": "easy-to-manage-parrots",
+      "executed_at_utc": "2026-06-04T20:01:04Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000008_easy-to-manage-parrots.parquet"
+    }
+  ]
+}
