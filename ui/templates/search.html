@@ -3,74 +3,73 @@
 {% block title %}Hybrid Query UI{% endblock %}
 
 {% block content %}
-  <main class="layout">
-    <aside class="sidebar">
-      <section class="panel">
-        <p class="section-label">Search Settings</p>
-        <form class="search-form" action="{{ url_for('search') }}" method="post" data-search-form>
-          <label class="field-label" for="query-input">Query</label>
-          <div class="query-box">
-            <input
-              id="query-input"
-              name="query"
-              type="text"
-              value="{{ current_query }}"
-              placeholder="Search the pets corpus..."
-              autocomplete="off"
-              spellcheck="false"
-              data-query-input
-              data-suggestions-url="{{ url_for('query_suggestions') }}"
-            >
-            <div class="suggestions" hidden data-suggestions></div>
-          </div>
-
-          <label class="field-label" for="display-limit">Results to display</label>
-          <select id="display-limit" name="display_limit" data-display-limit-select>
-            {% for option in display_options %}
-              <option value="{{ option }}" {% if option|string == selected_display_value %}selected{% endif %}>
-                Top {{ option }}
-              </option>
-            {% endfor %}
-            <option value="custom" {% if selected_display_value == 'custom' %}selected{% endif %}>
-              Other
-            </option>
-          </select>
-          <div class="custom-limit-box{% if selected_display_value != 'custom' %} is-hidden{% endif %}" data-custom-limit-box>
-            <label class="field-label" for="display-limit-custom">Custom k</label>
-            <input
-              id="display-limit-custom"
-              name="display_limit_custom"
-              type="number"
-              min="1"
-              step="1"
-              value="{{ custom_display_limit }}"
-              placeholder="Enter any positive k"
-            >
-          </div>
-
-          <button type="submit" class="submit-button" data-submit-button>
-            Run query
-          </button>
-          <p class="helper-text">
-            Existing queries reuse their saved file from <code>rankings/initial_rankings</code>. New queries are computed once and then become reusable.
-          </p>
-        </form>
-      </section>
-
-      <section class="panel">
-        <p class="section-label">Previous Queries</p>
-        <div class="history-list">
-          {% for item in recent_queries %}
-            <a class="history-item" href="{{ url_for('query_results', query_id=item.query_id, display=display_limit or 25) }}">
-              <strong>{{ item.query_text }}</strong>
-              <span>{{ item.query_id }} | {{ item.stored_result_count }} rows{% if not item.is_full_ranking %} | partial{% endif %}</span>
-            </a>
-          {% else %}
-            <p class="helper-text">No query history yet.</p>
-          {% endfor %}
+  <main class="page-stack">
+    <section class="panel search-panel">
+      <div class="search-panel-header">
+        <div>
+          <p class="section-label">Search Settings</p>
+          <h2>Run or Reuse a Ranking</h2>
         </div>
-      </section>
-    </aside>
+        <p class="helper-text search-panel-note">
+          Existing queries reuse their saved file from <code>rankings/initial_rankings</code>. New queries are computed once and then become reusable.
+        </p>
+      </div>
+
+      <form class="search-form search-form-top" action="{{ url_for('search') }}" method="post" data-search-form>
+        <div class="search-grid">
+          <div class="search-field search-field-query">
+            <label class="field-label" for="query-input">Query</label>
+            <div class="query-box">
+              <input
+                id="query-input"
+                name="query"
+                type="text"
+                value="{{ current_query }}"
+                placeholder="Search the pets corpus..."
+                autocomplete="off"
+                spellcheck="false"
+                data-query-input
+                data-suggestions-url="{{ url_for('query_suggestions') }}"
+              >
+              <div class="suggestions" hidden data-suggestions></div>
+            </div>
+          </div>
+
+          <div class="search-field search-field-limit">
+            <label class="field-label" for="display-limit">Results to display</label>
+            <select id="display-limit" name="display_limit" data-display-limit-select>
+              {% for option in display_options %}
+                <option value="{{ option }}" {% if option|string == selected_display_value %}selected{% endif %}>
+                  Top {{ option }}
+                </option>
+              {% endfor %}
+              <option value="custom" {% if selected_display_value == 'custom' %}selected{% endif %}>
+                Other
+              </option>
+            </select>
+          </div>
+
+          <div class="search-field search-field-action">
+            <button type="submit" class="submit-button" data-submit-button>
+              Run query
+            </button>
+          </div>
+        </div>
+
+        <div class="custom-limit-box{% if selected_display_value != 'custom' %} is-hidden{% endif %}" data-custom-limit-box>
+          <label class="field-label" for="display-limit-custom">Custom k</label>
+          <input
+            id="display-limit-custom"
+            name="display_limit_custom"
+            type="number"
+            min="1"
+            step="1"
+            value="{{ custom_display_limit }}"
+            placeholder="Enter any positive k"
+          >
+        </div>
+      </form>
+    </section>
 
     <section class="workspace">
       {% if error_message %}

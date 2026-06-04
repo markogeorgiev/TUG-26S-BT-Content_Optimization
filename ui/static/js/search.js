@@ -47,7 +47,7 @@ if (queryInput && suggestionsBox) {
             data-index="${index}"
           >
             <strong>${escapeHtml(item.query_text)}</strong>
-            <span>${escapeHtml(item.query_id)} · ${item.stored_result_count} rows${item.is_full_ranking ? "" : " · partial"}</span>
+            <span>${escapeHtml(item.query_id)} | ${item.stored_result_count} rows${item.is_full_ranking ? "" : " | partial"}</span>
           </button>
         `
       )
@@ -138,5 +138,80 @@ if (searchForm && submitButton) {
   searchForm.addEventListener("submit", () => {
     submitButton.disabled = true;
     submitButton.textContent = "Running query...";
+  });
+}
+
+const sortableTable = document.querySelector("[data-sort-table]");
+
+if (sortableTable) {
+  const headerButtons = Array.from(sortableTable.querySelectorAll(".sort-button"));
+  const tableBody = sortableTable.querySelector("tbody");
+
+  const parseSortValue = (cell, type) => {
+    const rawValue = cell?.dataset.sortValue ?? cell?.textContent?.trim() ?? "";
+    if (type === "number") {
+      const numericValue = Number(rawValue);
+      return Number.isNaN(numericValue) ? Number.NEGATIVE_INFINITY : numericValue;
+    }
+    return String(rawValue).toLocaleLowerCase();
+  };
+
+  const refreshSortIndicators = (activeButton, direction) => {
+    headerButtons.forEach((button) => {
+      const isActive = button === activeButton;
+      button.classList.toggle("is-active", isActive);
+      button.dataset.sortDirection = isActive ? direction : "none";
+
+      const indicator = button.querySelector(".sort-indicator");
+      if (!indicator) {
+        return;
+      }
+
+      if (!isActive) {
+        indicator.textContent = "<>";
+      } else if (direction === "asc") {
+        indicator.textContent = "^";
+      } else {
+        indicator.textContent = "v";
+      }
+    });
+  };
+
+  headerButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      if (!tableBody) {
+        return;
+      }
+
+      const direction = button.dataset.sortDirection === "asc" ? "desc" : "asc";
+      const type = button.dataset.sortType || "string";
+      const columnIndex = button.closest("th")?.cellIndex ?? 0;
+      const sortableRows = Array.from(tableBody.querySelectorAll("tr")).map((row, originalIndex) => ({
+        row,
+        originalIndex,
+        value: parseSortValue(row.cells[columnIndex], type),
+      }));
+
+      sortableRows.sort((left, right) => {
+        let comparison = 0;
+        if (type === "number") {
+          comparison = left.value - right.value;
+        } else {
+          comparison = String(left.value).localeCompare(String(right.value), undefined, {
+            numeric: true,
+            sensitivity: "base",
+          });
+        }
+
+        if (comparison === 0) {
+          comparison = left.originalIndex - right.originalIndex;
+        }
+
+        return direction === "asc" ? comparison : -comparison;
+      });
+
+      tableBody.append(...sortableRows.map((item) => item.row));
+      refreshSortIndicators(button, direction);
+    });
   });
 }

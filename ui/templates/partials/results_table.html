@@ -3,6 +3,9 @@
     <div>
       <p class="section-label">Results</p>
       <h2>Stored Ranking Preview</h2>
+      {% if results %}
+        <p class="helper-text">Click any column header to sort the visible rows.</p>
+      {% endif %}
     </div>
     {% if query_record %}
       <a class="download-link" href="{{ url_for('download_query_results', query_id=query_record.query_id) }}">
@@ -13,24 +16,64 @@
 
   {% if results %}
     <div class="table-wrap">
-      <table class="results-table">
+      <table class="results-table" data-sort-table>
         <thead>
           <tr>
-            <th>Rank</th>
-            <th>Title</th>
-            <th>Hybrid</th>
-            <th>BM25</th>
-            <th>Semantic</th>
-            <th>PageRank</th>
-            <th>Page ID</th>
-            <th>Matched Query Tokens</th>
+            <th scope="col">
+              <button type="button" class="sort-button is-active" data-sort-key="rank" data-sort-type="number" data-sort-direction="asc">
+                Rank
+                <span class="sort-indicator" aria-hidden="true">^</span>
+              </button>
+            </th>
+            <th scope="col">
+              <button type="button" class="sort-button" data-sort-key="title" data-sort-type="string" data-sort-direction="none">
+                Title
+                <span class="sort-indicator" aria-hidden="true">&lt;&gt;</span>
+              </button>
+            </th>
+            <th scope="col">
+              <button type="button" class="sort-button" data-sort-key="hybrid_score" data-sort-type="number" data-sort-direction="none">
+                Hybrid
+                <span class="sort-indicator" aria-hidden="true">&lt;&gt;</span>
+              </button>
+            </th>
+            <th scope="col">
+              <button type="button" class="sort-button" data-sort-key="bm25_score_norm" data-sort-type="number" data-sort-direction="none">
+                BM25
+                <span class="sort-indicator" aria-hidden="true">&lt;&gt;</span>
+              </button>
+            </th>
+            <th scope="col">
+              <button type="button" class="sort-button" data-sort-key="semantic_score_norm" data-sort-type="number" data-sort-direction="none">
+                Semantic
+                <span class="sort-indicator" aria-hidden="true">&lt;&gt;</span>
+              </button>
+            </th>
+            <th scope="col">
+              <button type="button" class="sort-button" data-sort-key="pagerank_norm" data-sort-type="number" data-sort-direction="none">
+                PageRank
+                <span class="sort-indicator" aria-hidden="true">&lt;&gt;</span>
+              </button>
+            </th>
+            <th scope="col">
+              <button type="button" class="sort-button" data-sort-key="page_id" data-sort-type="number" data-sort-direction="none">
+                Page ID
+                <span class="sort-indicator" aria-hidden="true">&lt;&gt;</span>
+              </button>
+            </th>
+            <th scope="col">
+              <button type="button" class="sort-button" data-sort-key="matched_query_tokens" data-sort-type="string" data-sort-direction="none">
+                Matched Query Tokens
+                <span class="sort-indicator" aria-hidden="true">&lt;&gt;</span>
+              </button>
+            </th>
           </tr>
         </thead>
         <tbody>
           {% for row in results %}
             <tr>
-              <td>{{ row.rank }}</td>
-              <td>
+              <td data-sort-value="{{ row.rank }}">{{ row.rank }}</td>
+              <td data-sort-value="{{ row.title }}">
                 <div class="title-cell">
                   {% if row.article_url %}
                     <a
@@ -47,12 +90,12 @@
                   <span>{{ row.file_name }}</span>
                 </div>
               </td>
-              <td>{{ '%.6f'|format(row.hybrid_score) }}</td>
-              <td>{{ '%.4f'|format(row.bm25_score_norm) }}</td>
-              <td>{{ '%.4f'|format(row.semantic_score_norm) }}</td>
-              <td>{{ '%.4f'|format(row.pagerank_norm) }}</td>
-              <td>{{ row.page_id }}</td>
-              <td>{{ row.matched_query_tokens or 'None' }}</td>
+              <td data-sort-value="{{ row.hybrid_score }}">{{ '%.6f'|format(row.hybrid_score) }}</td>
+              <td data-sort-value="{{ row.bm25_score_norm }}">{{ '%.4f'|format(row.bm25_score_norm) }}</td>
+              <td data-sort-value="{{ row.semantic_score_norm }}">{{ '%.4f'|format(row.semantic_score_norm) }}</td>
+              <td data-sort-value="{{ row.pagerank_norm }}">{{ '%.4f'|format(row.pagerank_norm) }}</td>
+              <td data-sort-value="{{ row.page_id }}">{{ row.page_id }}</td>
+              <td data-sort-value="{{ row.matched_query_tokens or '' }}">{{ row.matched_query_tokens or 'None' }}</td>
             </tr>
           {% endfor %}
         </tbody>
@@ -60,7 +103,7 @@
     </div>
   {% else %}
     <div class="empty-state">
-      <p>No ranking selected yet. Run a query or pick a previous one from the sidebar.</p>
+      <p>No ranking selected yet. Run a query or start typing above.</p>
     </div>
   {% endif %}
 </div>

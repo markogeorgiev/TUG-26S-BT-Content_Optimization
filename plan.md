@@ -29,7 +29,7 @@
     - Wikipedia texts often include long lists in the format `- [item-1]\n`, which `spacy` may treat as a single sentence. For these cases, we use preprocessing that groups list items into shorter natural-language sentences, for example: `The list also includes [item-1], [item-2], ..., [item-5].`
     - The 404 error pages are ignored for both the dense neural retriever and the sparse BM25 retriever.
 5. Compile an initiall selection of queries which will be used to create content rankings. 
-6
+
 
 ## II. Content Charateristics
 
@@ -42,7 +42,20 @@
     - From semantic features: 
         - Possibly based on BERTopic
     - What kind of features are there? 
-
+1. Define three categories of features which we will measure: 
+    - Lexical & Surface Metrics: 
+        - Word/Token count
+        - Sentence Count
+    - Readability & Complexity Formulas: 
+        - Flesch-Kincaid Grade Level $0.39 \times (\frac{\text{total words}}{\text{total sentences}}) + 11.8 \times (\frac{\text{total syllables}}{\text{total words}}) - 15.59)$
+        - Gunning Fog Index
+        - Lexical Density
+        _ Lexical Diversity 
+    - Semantic & Linguistic Analysis: 
+        - Keyword Density (If possible wtr. to query). 
+        - Sentiment score: A measurement of the emotional tone of the text (typically ranging from -1.0 for highly negative to +1.0 for highly positive).
+        - Entity Extraction
+        - Topic Modeling?? However it needs to be standardized somehow.... 
 
 ## III. Web UI v1
 
