@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import json
+import hashlib
+import re
+from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -14,6 +17,43 @@ CONTENT_FEATURES_DIR = ranking_backend.REPO_ROOT / "data" / "content_features"
 CONTENT_FEATURES_PARQUET_FILE = CONTENT_FEATURES_DIR / "content_features.parquet"
 CONTENT_FEATURES_CSV_FILE = CONTENT_FEATURES_DIR / "content_features.csv"
 CONTENT_FEATURES_CONFIG_FILE = CONTENT_FEATURES_DIR / "content_features_config.json"
+RANK_FEATURE_PLOTS_DIR = ranking_backend.RANKINGS_DIR / "content_feature_rank_plots"
+
+RANK_FEATURE_MAX_RANK = 100
+RANK_FEATURE_ROLLING_WINDOW = 50
+RANK_FEATURE_MIN_PERIODS = 10
+MEDIAN_DROP_TOP_START = 1
+MEDIAN_DROP_TOP_END = 25
+MEDIAN_DROP_COMPARISON_SPAN = 25
+DEFAULT_RANK_FEATURE_PLOT_KIND = "ribbon"
+RANK_FEATURE_PLOT_KINDS = [
+    {
+        "value": "ribbon",
+        "label": "Ribbon plots",
+        "description": "Per-feature median line with IQR and 10th-90th percentile bands.",
+    },
+    {
+        "value": "overlay",
+        "label": "Per-query overlay",
+        "description": "Per-feature faint query-level rolling medians plus bold aggregate median.",
+    },
+    {
+        "value": "heatmap",
+        "label": "Feature consistency heatmap",
+        "description": "One heatmap comparing normalized IQR width across four rank buckets.",
+    },
+    {
+        "value": "violin",
+        "label": "Violin plots",
+        "description": "Per-feature distribution violins across the four top-100 rank buckets.",
+    },
+]
+STEELBLUE = "#4682b4"
+
+IDENTITY_FEATURE_COLUMNS = {
+    "feature_doc_id",
+    "page_id",
+}
 
 FEATURE_METRIC_GROUPS = [
     {
@@ -90,6 +130,159 @@ def _parse_json_list(value: Any) -> list[dict[str, Any]]:
     return [item for item in parsed if isinstance(item, dict)]
 
 
+def _record_result_count(record: dict[str, Any]) -> int:
+    return int(record.get("stored_result_count") or record.get("result_count") or 0)
+
+
+def _record_is_full_ranking(record: dict[str, Any]) -> bool:
+    if bool(record.get("stored_full_ranking")):
+        return True
+    return _record_result_count(record) >= ranking_backend.total_document_count()
+
+
+def _ranking_result_path(record: dict[str, Any]) -> Path:
+    return ranking_backend.resolve_result_path(str(record.get("result_file") or ""))
+
+
+def _normalize_plot_kind(plot_kind: str | None) -> str:
+    normalized = str(plot_kind or DEFAULT_RANK_FEATURE_PLOT_KIND).strip().casefold()
+    allowed = {option["value"] for option in RANK_FEATURE_PLOT_KINDS}
+    if normalized not in allowed:
+        raise ValueError(
+            "Unknown plot kind. Expected one of: " + ", ".join(sorted(allowed))
+        )
+    return normalized
+
+
+def _safe_collection_key(query_ids: list[str], plot_kind: str) -> str:
+    key_parts = [
+        plot_kind,
+        f"max_rank={RANK_FEATURE_MAX_RANK}",
+        f"window={RANK_FEATURE_ROLLING_WINDOW}",
+        f"min_periods={RANK_FEATURE_MIN_PERIODS}",
+        *query_ids,
+    ]
+    digest = hashlib.sha256("|".join(key_parts).encode("utf-8")).hexdigest()[:16]
+    return f"collection_{digest}"
+
+
+def _validate_collection_key(collection_key: str) -> str:
+    normalized = str(collection_key or "").strip()
+    if not re.fullmatch(r"collection_[a-f0-9]{16}", normalized):
+        raise FileNotFoundError(f"Unknown plot collection: {collection_key}")
+    return normalized
+
+
+def _validate_plot_file_name(file_name: str) -> str:
+    normalized = Path(str(file_name or "")).name
+    if not re.fullmatch(r"(plot|overlay|violin)_[A-Za-z0-9_]+\.png|heatmap\.png", normalized):
+        raise FileNotFoundError(f"Unknown plot file: {file_name}")
+    return normalized
+
+
+def _relative_to_repo(path: Path) -> str:
+    return ranking_backend.relative_to_repo(path)
+
+
+def _format_query_record(record: dict[str, Any]) -> dict[str, Any]:
+    query_text = str(record.get("query_text") or "")
+    result_path = _ranking_result_path(record)
+    return {
+        "query_id": str(record.get("query_id") or ""),
+        "query_text": query_text,
+        "query_slug": str(record.get("query_slug") or ""),
+        "query_key": str(record.get("query_key") or ranking_backend.query_identity_key(query_text)),
+        "executed_at_utc": str(record.get("executed_at_utc") or ""),
+        "result_file": str(record.get("result_file") or ""),
+        "stored_result_count": _record_result_count(record),
+        "is_full_ranking": _record_is_full_ranking(record),
+        "has_result_file": result_path.exists(),
+    }
+
+
+def _query_records_by_id() -> dict[str, dict[str, Any]]:
+    return {
+        str(record.get("query_id") or ""): _format_query_record(record)
+        for record in ranking_backend.iter_saved_query_records()
+    }
+
+
+def _normalize_query_ids(query_ids: list[str] | tuple[str, ...]) -> list[str]:
+    records_by_id = _query_records_by_id()
+    normalized = sorted(
+        {
+            str(query_id or "").strip()
+            for query_id in query_ids
+            if str(query_id or "").strip()
+        }
+    )
+    if not normalized:
+        raise ValueError("Select at least one saved query to generate rank-feature plots.")
+
+    unknown_ids = [query_id for query_id in normalized if query_id not in records_by_id]
+    if unknown_ids:
+        raise ValueError("Unknown query IDs: " + ", ".join(unknown_ids))
+
+    missing_files = [
+        query_id
+        for query_id in normalized
+        if not bool(records_by_id[query_id]["has_result_file"])
+    ]
+    if missing_files:
+        raise FileNotFoundError(
+            "Missing ranking parquet files for query IDs: " + ", ".join(missing_files)
+        )
+
+    return normalized
+
+
+def _plot_metadata_path(collection_key: str) -> Path:
+    return RANK_FEATURE_PLOTS_DIR / collection_key / "metadata.json"
+
+
+def _plot_output_dir(collection_key: str) -> Path:
+    return RANK_FEATURE_PLOTS_DIR / collection_key
+
+
+def _load_plot_metadata(collection_key: str, plot_kind: str) -> dict[str, Any] | None:
+    metadata_path = _plot_metadata_path(collection_key)
+    if not metadata_path.exists():
+        return None
+    try:
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    except (OSError, TypeError, json.JSONDecodeError):
+        return None
+
+    output_dir = _plot_output_dir(collection_key)
+    plot_files = metadata.get("plot_files") or []
+    if not plot_files:
+        return None
+    if str(metadata.get("plot_kind") or "") != plot_kind:
+        return None
+    rank_window = metadata.get("rank_window") or {}
+    if (
+        int(rank_window.get("max_rank") or 0) != RANK_FEATURE_MAX_RANK
+        or int(rank_window.get("rolling_window") or 0) != RANK_FEATURE_ROLLING_WINDOW
+        or int(rank_window.get("min_periods") or 0) != RANK_FEATURE_MIN_PERIODS
+        or bool(rank_window.get("center")) is not True
+    ):
+        return None
+    if not all((output_dir / str(plot_file.get("file_name") or "")).exists() for plot_file in plot_files):
+        return None
+
+    metadata["cache_status"] = "reused"
+    return metadata
+
+
+def _save_plot_metadata(collection_key: str, metadata: dict[str, Any]) -> None:
+    metadata_path = _plot_metadata_path(collection_key)
+    metadata_path.parent.mkdir(parents=True, exist_ok=True)
+    metadata_path.write_text(
+        json.dumps(metadata, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+
+
 @lru_cache(maxsize=1)
 def load_content_features() -> pd.DataFrame:
     if CONTENT_FEATURES_PARQUET_FILE.exists():
@@ -158,6 +351,584 @@ def load_enriched_content_features() -> pd.DataFrame:
 
     enriched["page_id"] = enriched["page_id"].astype("int64")
     return enriched
+
+
+def saved_ranking_query_options() -> list[dict[str, Any]]:
+    records = [_format_query_record(record) for record in ranking_backend.iter_saved_query_records()]
+    return sorted(records, key=lambda record: record["query_id"])
+
+
+def rank_feature_plot_kind_options() -> list[dict[str, str]]:
+    return [dict(option) for option in RANK_FEATURE_PLOT_KINDS]
+
+
+def rank_feature_columns() -> list[str]:
+    enriched = load_enriched_content_features()
+    numeric_columns = enriched.select_dtypes(include=["number"]).columns
+    return [
+        str(column)
+        for column in numeric_columns
+        if str(column) not in IDENTITY_FEATURE_COLUMNS
+        and enriched[str(column)].notna().any()
+    ]
+
+
+def _load_rank_rows(query_ids: list[str], max_rank: int) -> pd.DataFrame:
+    records_by_id = _query_records_by_id()
+    frames: list[pd.DataFrame] = []
+    ranking_columns = ["rank", "page_id", "title"]
+
+    for query_id in query_ids:
+        record = records_by_id[query_id]
+        result_path = _ranking_result_path(record)
+        ranking_df = pd.read_parquet(result_path, columns=ranking_columns)
+        ranking_df = ranking_df.loc[ranking_df["rank"].between(1, max_rank)].copy()
+        ranking_df["query_id"] = query_id
+        ranking_df["query_text"] = record["query_text"]
+        frames.append(ranking_df)
+
+    if not frames:
+        return pd.DataFrame(columns=[*ranking_columns, "query_id", "query_text"])
+
+    rank_rows = pd.concat(frames, ignore_index=True)
+    rank_rows["page_id"] = rank_rows["page_id"].astype("int64")
+    rank_rows["rank"] = rank_rows["rank"].astype("int64")
+    return rank_rows
+
+
+def load_rank_feature_frame(query_ids: list[str], max_rank: int = RANK_FEATURE_MAX_RANK) -> pd.DataFrame:
+    normalized_query_ids = _normalize_query_ids(query_ids)
+    rank_rows = _load_rank_rows(normalized_query_ids, max_rank=max_rank)
+    if rank_rows.empty:
+        raise ValueError("Selected rankings did not contain any rows to analyze.")
+
+    feature_columns = rank_feature_columns()
+    feature_lookup = load_enriched_content_features()[["page_id", *feature_columns]].copy()
+    merged = rank_rows.merge(feature_lookup, on="page_id", how="left", validate="many_to_one")
+
+    missing_features = int(merged[feature_columns].isna().all(axis=1).sum())
+    if missing_features:
+        raise ValueError(
+            f"Could not map {missing_features:,} ranked articles to content features."
+        )
+
+    return merged.sort_values(["rank", "query_id", "page_id"]).reset_index(drop=True)
+
+
+def _rolling_rank_statistics(
+    df: pd.DataFrame,
+    feature: str,
+    window: int,
+    max_rank: int,
+) -> pd.DataFrame:
+    if feature not in df.columns:
+        raise ValueError(f"Unknown feature column: {feature}")
+
+    working = df.loc[df["rank"].between(1, max_rank), ["rank", "query_id", "page_id", feature]].copy()
+    working[feature] = pd.to_numeric(working[feature], errors="coerce")
+    working = working.dropna(subset=[feature])
+    working = working.sort_values(["rank", "query_id", "page_id"]).reset_index(drop=True)
+
+    if len(working) < RANK_FEATURE_MIN_PERIODS:
+        raise ValueError(
+            f"Not enough numeric rows to plot {feature}. "
+            f"Need at least {RANK_FEATURE_MIN_PERIODS}, found {len(working)}."
+        )
+
+    rolling = working[feature].rolling(
+        window=window,
+        center=True,
+        min_periods=RANK_FEATURE_MIN_PERIODS,
+    )
+    plot_data = pd.DataFrame(
+        {
+            "rank": working["rank"],
+            "median": rolling.median(),
+            "q25": rolling.quantile(0.25),
+            "q75": rolling.quantile(0.75),
+            "q10": rolling.quantile(0.10),
+            "q90": rolling.quantile(0.90),
+        }
+    ).dropna()
+
+    if plot_data.empty:
+        raise ValueError(f"No rolling statistics could be computed for {feature}.")
+
+    return plot_data.groupby("rank", as_index=False).median(numeric_only=True)
+
+
+def _load_matplotlib_pyplot():
+    try:
+        import matplotlib
+
+        matplotlib.use("Agg", force=True)
+        import matplotlib.pyplot as plt
+    except ModuleNotFoundError as exc:
+        raise RuntimeError(
+            "Matplotlib is required to generate rank-feature plots. "
+            "Install dependencies with: pip install -r requrements.txt"
+        ) from exc
+    return plt
+
+
+def plot_feature_vs_rank(
+    df: pd.DataFrame,
+    feature: str,
+    window: int = RANK_FEATURE_ROLLING_WINDOW,
+    max_rank: int = RANK_FEATURE_MAX_RANK,
+):
+    plt = _load_matplotlib_pyplot()
+
+    plot_data = _rolling_rank_statistics(
+        df=df,
+        feature=feature,
+        window=window,
+        max_rank=max_rank,
+    )
+
+    fig, ax = plt.subplots(figsize=(10.8, 6.2))
+    x_values = plot_data["rank"].to_numpy()
+    median = plot_data["median"].to_numpy()
+    q25 = plot_data["q25"].to_numpy()
+    q75 = plot_data["q75"].to_numpy()
+    q10 = plot_data["q10"].to_numpy()
+    q90 = plot_data["q90"].to_numpy()
+
+    ax.fill_between(
+        x_values,
+        q10,
+        q90,
+        color=STEELBLUE,
+        alpha=0.16,
+        linewidth=0,
+        label="10th-90th percentile band",
+    )
+    ax.fill_between(
+        x_values,
+        q25,
+        q75,
+        color=STEELBLUE,
+        alpha=0.34,
+        linewidth=0,
+        label="25th-75th percentile band",
+    )
+    ax.plot(
+        x_values,
+        median,
+        color=STEELBLUE,
+        linewidth=2.4,
+        label="Rolling median",
+    )
+
+    ax.set_title(f"{feature} vs. Rank", fontsize=16, pad=14)
+    ax.set_xlabel("Rank")
+    ax.set_ylabel("Feature value")
+    ax.set_xlim(1, max_rank)
+    ax.grid(True, color="#d7e3ea", linewidth=0.8, alpha=0.72)
+    ax.legend(loc="best", frameon=True)
+    fig.tight_layout()
+    return fig
+
+
+def _rolling_median_by_rank(
+    df: pd.DataFrame,
+    feature: str,
+    window: int,
+    max_rank: int,
+) -> pd.DataFrame:
+    working = df.loc[df["rank"].between(1, max_rank), ["rank", feature]].copy()
+    working[feature] = pd.to_numeric(working[feature], errors="coerce")
+    working = working.dropna(subset=[feature])
+    working = working.sort_values("rank").reset_index(drop=True)
+
+    if len(working) < RANK_FEATURE_MIN_PERIODS:
+        return pd.DataFrame(columns=["rank", "median"])
+
+    rolling = working[feature].rolling(
+        window=window,
+        center=True,
+        min_periods=RANK_FEATURE_MIN_PERIODS,
+    )
+    return pd.DataFrame(
+        {
+            "rank": working["rank"],
+            "median": rolling.median(),
+        }
+    ).dropna()
+
+
+def plot_feature_query_overlay(
+    df: pd.DataFrame,
+    feature: str,
+    window: int = RANK_FEATURE_ROLLING_WINDOW,
+    max_rank: int = RANK_FEATURE_MAX_RANK,
+):
+    plt = _load_matplotlib_pyplot()
+    aggregate_data = _rolling_rank_statistics(
+        df=df,
+        feature=feature,
+        window=window,
+        max_rank=max_rank,
+    )
+
+    fig, ax = plt.subplots(figsize=(10.8, 6.2))
+    query_count = 0
+    for query_id, query_df in df.groupby("query_id", sort=True):
+        query_data = _rolling_median_by_rank(
+            query_df,
+            feature=feature,
+            window=window,
+            max_rank=max_rank,
+        )
+        if query_data.empty:
+            continue
+        query_count += 1
+        ax.plot(
+            query_data["rank"].to_numpy(),
+            query_data["median"].to_numpy(),
+            color=STEELBLUE,
+            alpha=0.22,
+            linewidth=1.05,
+            label="Per-query rolling median" if query_count == 1 else None,
+        )
+
+    ax.plot(
+        aggregate_data["rank"].to_numpy(),
+        aggregate_data["median"].to_numpy(),
+        color=STEELBLUE,
+        linewidth=2.9,
+        label="Aggregate rolling median",
+    )
+    ax.set_title(f"{feature} vs. Rank", fontsize=16, pad=14)
+    ax.set_xlabel("Rank")
+    ax.set_ylabel("Feature value")
+    ax.set_xlim(1, max_rank)
+    ax.grid(True, color="#d7e3ea", linewidth=0.8, alpha=0.72)
+    ax.legend(loc="best", frameon=True)
+    fig.tight_layout()
+    return fig
+
+
+def _rank_buckets(max_rank: int, bucket_count: int = 4) -> list[dict[str, Any]]:
+    buckets: list[dict[str, Any]] = []
+    for index in range(bucket_count):
+        start = int((index * max_rank) / bucket_count) + 1
+        end = int(((index + 1) * max_rank) / bucket_count)
+        buckets.append(
+            {
+                "start": start,
+                "end": end,
+                "label": f"{start}-{end}",
+            }
+        )
+    return buckets
+
+
+def _iqr(values: pd.Series) -> float:
+    clean_values = pd.to_numeric(values, errors="coerce").dropna()
+    if clean_values.empty:
+        return 0.0
+    return float(clean_values.quantile(0.75) - clean_values.quantile(0.25))
+
+
+def plot_feature_consistency_heatmap(
+    df: pd.DataFrame,
+    features: list[str],
+    max_rank: int = RANK_FEATURE_MAX_RANK,
+):
+    plt = _load_matplotlib_pyplot()
+    buckets = _rank_buckets(max_rank)
+    normalized_rows: list[list[float]] = []
+    raw_iqr_rows: list[list[float]] = []
+
+    for feature in features:
+        feature_values = pd.to_numeric(df[feature], errors="coerce")
+        global_iqr = _iqr(feature_values)
+        normalized_row: list[float] = []
+        raw_iqr_row: list[float] = []
+
+        for bucket in buckets:
+            bucket_values = df.loc[
+                df["rank"].between(bucket["start"], bucket["end"]),
+                feature,
+            ]
+            raw_iqr = _iqr(bucket_values)
+            raw_iqr_row.append(raw_iqr)
+            if global_iqr <= 0:
+                normalized_row.append(0.0)
+            else:
+                normalized_row.append(max(0.0, min(raw_iqr / global_iqr, 1.0)))
+
+        raw_iqr_rows.append(raw_iqr_row)
+        normalized_rows.append(normalized_row)
+
+    fig_height = max(7.2, 0.52 * len(features) + 2.6)
+    fig, ax = plt.subplots(figsize=(9.6, fig_height))
+    heatmap = ax.imshow(normalized_rows, cmap="Blues", vmin=0, vmax=1, aspect="auto")
+    ax.set_title("Feature consistency heatmap", fontsize=16, pad=14)
+    ax.set_xlabel("Rank bucket")
+    ax.set_ylabel("Feature")
+    ax.set_xticks(range(len(buckets)))
+    ax.set_xticklabels([bucket["label"] for bucket in buckets])
+    ax.set_yticks(range(len(features)))
+    ax.set_yticklabels(features)
+
+    for feature_index, raw_iqr_row in enumerate(raw_iqr_rows):
+        for bucket_index, raw_iqr in enumerate(raw_iqr_row):
+            normalized_value = normalized_rows[feature_index][bucket_index]
+            text_color = "white" if normalized_value >= 0.55 else "#2d2419"
+            ax.text(
+                bucket_index,
+                feature_index,
+                f"{raw_iqr:.3g}",
+                ha="center",
+                va="center",
+                color=text_color,
+                fontsize=8,
+            )
+
+    colorbar = fig.colorbar(heatmap, ax=ax, fraction=0.046, pad=0.04)
+    colorbar.set_label("Normalized IQR width")
+    fig.tight_layout()
+    return fig
+
+
+def plot_feature_bucket_violin(
+    df: pd.DataFrame,
+    feature: str,
+    max_rank: int = RANK_FEATURE_MAX_RANK,
+):
+    plt = _load_matplotlib_pyplot()
+    buckets = _rank_buckets(max_rank)
+    distributions: list[list[float]] = []
+    labels: list[str] = []
+
+    for bucket in buckets:
+        values = pd.to_numeric(
+            df.loc[df["rank"].between(bucket["start"], bucket["end"]), feature],
+            errors="coerce",
+        ).dropna()
+        if values.empty:
+            distributions.append([0.0])
+        else:
+            distributions.append(values.astype(float).tolist())
+        labels.append(bucket["label"])
+
+    fig, ax = plt.subplots(figsize=(10.2, 6.1))
+    violin_parts = ax.violinplot(
+        distributions,
+        showmeans=False,
+        showmedians=True,
+        showextrema=True,
+    )
+    for body in violin_parts["bodies"]:
+        body.set_facecolor(STEELBLUE)
+        body.set_edgecolor("#245a7d")
+        body.set_alpha(0.34)
+        body.set_linewidth(0.8)
+
+    for part_name in ["cmedians", "cbars", "cmins", "cmaxes"]:
+        part = violin_parts.get(part_name)
+        if part is not None:
+            part.set_color("#245a7d")
+            part.set_linewidth(1.15 if part_name != "cmedians" else 2.0)
+
+    ax.set_title(f"{feature} distribution by rank bucket", fontsize=16, pad=14)
+    ax.set_xlabel("Rank bucket")
+    ax.set_ylabel("Feature value")
+    ax.set_xticks(range(1, len(labels) + 1))
+    ax.set_xticklabels(labels)
+    ax.grid(True, axis="y", color="#d7e3ea", linewidth=0.8, alpha=0.72)
+    fig.tight_layout()
+    return fig
+
+
+def _median_drop_window(max_rank: int) -> dict[str, int]:
+    comparison_start = max(
+        MEDIAN_DROP_TOP_END + 1,
+        max_rank - MEDIAN_DROP_COMPARISON_SPAN + 1,
+    )
+    return {
+        "top_start": MEDIAN_DROP_TOP_START,
+        "top_end": MEDIAN_DROP_TOP_END,
+        "comparison_start": comparison_start,
+        "comparison_end": max_rank,
+    }
+
+
+def _median_drop_summary(
+    df: pd.DataFrame,
+    features: list[str],
+    max_rank: int,
+) -> list[dict[str, Any]]:
+    window = _median_drop_window(max_rank)
+    top_slice = df.loc[df["rank"].between(window["top_start"], window["top_end"])]
+    comparison_slice = df.loc[
+        df["rank"].between(window["comparison_start"], window["comparison_end"])
+    ]
+    summaries: list[dict[str, Any]] = []
+
+    for feature in features:
+        top_values = pd.to_numeric(top_slice[feature], errors="coerce").dropna()
+        comparison_values = pd.to_numeric(comparison_slice[feature], errors="coerce").dropna()
+        if top_values.empty or comparison_values.empty:
+            continue
+
+        top_median = float(top_values.median())
+        comparison_median = float(comparison_values.median())
+        summaries.append(
+            {
+                "feature": feature,
+                "top_window_median": top_median,
+                "comparison_median": comparison_median,
+                "median_drop": top_median - comparison_median,
+            }
+        )
+
+    return sorted(summaries, key=lambda item: item["median_drop"], reverse=True)
+
+
+def get_or_create_rank_feature_plots(
+    query_ids: list[str],
+    plot_kind: str = DEFAULT_RANK_FEATURE_PLOT_KIND,
+) -> dict[str, Any]:
+    normalized_plot_kind = _normalize_plot_kind(plot_kind)
+    normalized_query_ids = _normalize_query_ids(query_ids)
+    collection_key = _safe_collection_key(normalized_query_ids, normalized_plot_kind)
+    cached_metadata = _load_plot_metadata(collection_key, normalized_plot_kind)
+    if cached_metadata is not None:
+        return cached_metadata
+
+    records_by_id = _query_records_by_id()
+    output_dir = _plot_output_dir(collection_key)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    analysis_df = load_rank_feature_frame(
+        normalized_query_ids,
+        max_rank=RANK_FEATURE_MAX_RANK,
+    )
+    features = rank_feature_columns()
+    plot_files: list[dict[str, Any]] = []
+
+    if normalized_plot_kind == "heatmap":
+        fig = plot_feature_consistency_heatmap(
+            analysis_df,
+            features,
+            max_rank=RANK_FEATURE_MAX_RANK,
+        )
+        file_name = "heatmap.png"
+        plot_path = output_dir / file_name
+        fig.savefig(plot_path, dpi=150)
+        import matplotlib.pyplot as plt
+
+        plt.close(fig)
+        plot_files.append(
+            {
+                "feature": "all_features",
+                "title": "Feature consistency heatmap",
+                "file_name": file_name,
+                "path": _relative_to_repo(plot_path),
+            }
+        )
+    else:
+        for feature in features:
+            if normalized_plot_kind == "violin":
+                fig = plot_feature_bucket_violin(
+                    analysis_df,
+                    feature,
+                    max_rank=RANK_FEATURE_MAX_RANK,
+                )
+                file_name = f"violin_{feature}.png"
+                title = f"{feature} distribution by rank bucket"
+            elif normalized_plot_kind == "overlay":
+                fig = plot_feature_query_overlay(
+                    analysis_df,
+                    feature,
+                    window=RANK_FEATURE_ROLLING_WINDOW,
+                    max_rank=RANK_FEATURE_MAX_RANK,
+                )
+                file_name = f"overlay_{feature}.png"
+                title = f"{feature} vs. Rank"
+            else:
+                fig = plot_feature_vs_rank(
+                    analysis_df,
+                    feature,
+                    window=RANK_FEATURE_ROLLING_WINDOW,
+                    max_rank=RANK_FEATURE_MAX_RANK,
+                )
+                file_name = f"plot_{feature}.png"
+                title = f"{feature} vs. Rank"
+
+            plot_path = output_dir / file_name
+            fig.savefig(plot_path, dpi=150)
+            import matplotlib.pyplot as plt
+
+            plt.close(fig)
+            plot_files.append(
+                {
+                    "feature": feature,
+                    "title": title,
+                    "file_name": file_name,
+                    "path": _relative_to_repo(plot_path),
+                }
+            )
+
+    summary_window = _median_drop_window(RANK_FEATURE_MAX_RANK)
+    summary = _median_drop_summary(
+        analysis_df,
+        features,
+        max_rank=RANK_FEATURE_MAX_RANK,
+    )
+    print(
+        "Largest feature median drops between "
+        f"ranks {summary_window['top_start']}-{summary_window['top_end']} and "
+        f"{summary_window['comparison_start']}-{summary_window['comparison_end']}:"
+    )
+    for item in summary[:10]:
+        print(
+            f"  {item['feature']}: "
+            f"{item['median_drop']:.6g} "
+            f"(top_window={item['top_window_median']:.6g}, "
+            f"comparison={item['comparison_median']:.6g})"
+        )
+    metadata = {
+        "schema_version": 1,
+        "collection_key": collection_key,
+        "cache_status": "generated",
+        "generated_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "output_dir": _relative_to_repo(output_dir),
+        "plot_kind": normalized_plot_kind,
+        "plot_kind_label": next(
+            option["label"]
+            for option in RANK_FEATURE_PLOT_KINDS
+            if option["value"] == normalized_plot_kind
+        ),
+        "query_ids": normalized_query_ids,
+        "queries": [records_by_id[query_id] for query_id in normalized_query_ids],
+        "rank_window": {
+            "max_rank": RANK_FEATURE_MAX_RANK,
+            "rolling_window": RANK_FEATURE_ROLLING_WINDOW,
+            "center": True,
+            "min_periods": RANK_FEATURE_MIN_PERIODS,
+        },
+        "median_drop_window": summary_window,
+        "row_count": int(len(analysis_df)),
+        "feature_count": int(len(features)),
+        "features": features,
+        "plot_files": plot_files,
+        "median_drop_summary": summary,
+    }
+    _save_plot_metadata(collection_key, metadata)
+    return metadata
+
+
+def resolve_rank_feature_plot_path(collection_key: str, file_name: str) -> Path:
+    normalized_collection_key = _validate_collection_key(collection_key)
+    normalized_file_name = _validate_plot_file_name(file_name)
+    plot_path = _plot_output_dir(normalized_collection_key) / normalized_file_name
+    if not plot_path.exists():
+        raise FileNotFoundError(f"Missing plot file: {plot_path}")
+    return plot_path
 
 
 def content_feature_document_count() -> int:

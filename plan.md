@@ -83,6 +83,8 @@
     - Regular For example, Rank 1 has short sentences, Rank 20 longer, Rank 120 even longer.
     - A consideration is that we expect differnt articles that both rank higher to have very different values for a single metric. 
         - This means tha for example different articles ranking 1 for different queires may have very different number of words, and we need to find a way to model this. So we are interested in modeling actuall correlaion as opposed to coincidence. 
+    - The question is: Among articles that rank highly, is this feature consistently high/low, or is it unstable?
+    
 
 X. Considering the content charateristics defined in section III, analyze the relationship between these charateristics and ranking. 
     - Figure out how to model relationships like these most effectively. 

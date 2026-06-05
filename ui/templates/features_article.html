@@ -8,10 +8,13 @@
   <main class="page-stack">
     <section class="feature-section-header">
       <div>
-        <p class="section-label">Features</p>
+        <p class="section-label">Content Features</p>
         <h2>Content Feature Analysis</h2>
       </div>
-      <nav class="secondary-nav" aria-label="Features navigation">
+      <nav class="secondary-nav" aria-label="Content features navigation">
+        <a class="secondary-nav-link" href="{{ url_for('rank_feature_plots') }}">
+          Rank Feature Plots
+        </a>
         <a class="secondary-nav-link is-active" href="{{ url_for('article_features') }}">
           Show Article Level Features
         </a>
@@ -21,7 +24,7 @@
     <section class="panel search-panel">
       <div class="search-panel-header">
         <div>
-          <p class="section-label">Features &gt; Show Article Level Features</p>
+          <p class="section-label">Content Features &gt; Show Article Level Features</p>
           <h2>Find An Article</h2>
         </div>
         <p class="helper-text search-panel-note">

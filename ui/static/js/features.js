@@ -128,3 +128,48 @@ if (articleSearchForm && articleSubmitButton) {
     articleSubmitButton.textContent = "Loading features...";
   });
 }
+
+const rankPlotForm = document.querySelector("[data-rank-plot-form]");
+const rankPlotSubmit = document.querySelector("[data-rank-plot-submit]");
+const rankQueryCheckboxes = Array.from(document.querySelectorAll("[data-rank-query-checkbox]"));
+const selectAllRankQueries = document.querySelector("[data-select-all-rank-queries]");
+const clearRankQueries = document.querySelector("[data-clear-rank-queries]");
+
+if (rankPlotForm && rankQueryCheckboxes.length) {
+  const enabledCheckboxes = rankQueryCheckboxes.filter((checkbox) => !checkbox.disabled);
+
+  const updateSubmitState = () => {
+    if (!rankPlotSubmit) {
+      return;
+    }
+    const hasSelection = enabledCheckboxes.some((checkbox) => checkbox.checked);
+    rankPlotSubmit.disabled = !hasSelection;
+  };
+
+  selectAllRankQueries?.addEventListener("click", () => {
+    enabledCheckboxes.forEach((checkbox) => {
+      checkbox.checked = true;
+    });
+    updateSubmitState();
+  });
+
+  clearRankQueries?.addEventListener("click", () => {
+    enabledCheckboxes.forEach((checkbox) => {
+      checkbox.checked = false;
+    });
+    updateSubmitState();
+  });
+
+  enabledCheckboxes.forEach((checkbox) => {
+    checkbox.addEventListener("change", updateSubmitState);
+  });
+
+  rankPlotForm.addEventListener("submit", () => {
+    if (rankPlotSubmit && !rankPlotSubmit.disabled) {
+      rankPlotSubmit.disabled = true;
+      rankPlotSubmit.textContent = "Preparing plots...";
+    }
+  });
+
+  updateSubmitState();
+}

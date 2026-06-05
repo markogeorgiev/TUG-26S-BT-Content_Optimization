@@ -8,7 +8,7 @@ This repository builds a retrieval corpus from Wikipedia's `Category:Pets` graph
 - BM25 document indexing
 - MiniLM-based semantic retrieval
 - hybrid document ranking
-- a Flask/Jinja web UI for querying the corpus and inspecting article-level content features
+- a Flask/Jinja web UI for querying the corpus, running temporary content-change experiments, analyzing article-level content features, and studying rank-feature relationships
 
 The current system behaves like a document search engine, not a chunk search engine. Chunk embeddings are used only to help score full documents.
 
@@ -23,7 +23,7 @@ The local crawl and graph artifacts currently on disk were generated on May 24, 
 - `data/corpus/`, `data/corpus_cleaned/`, `output/wikipedia-pets/texts/`, and `output/wikipedia-pets/texts-cleaned/` currently each contain `21,058` text files.
 - `data/bm25_index/` exists locally and contains the current BM25 artifacts.
 - `data/embeddings/` exists locally and currently includes combined MiniLM outputs plus part files.
-- `rankings/queries.json` currently contains `1` saved query and `rankings/initial_rankings/` contains its stored full ranking parquet.
+- `rankings/queries.json` currently contains `14` saved queries and `rankings/initial_rankings/` contains their stored full ranking parquets.
 
 These numbers describe the current local workspace, not a fixed expectation for future reruns.
 
@@ -43,6 +43,8 @@ These numbers describe the current local workspace, not a fixed expectation for 
   Current CPU-only MiniLM embedding pipeline.
 - `retriever/run_hybrid_rankings.py`
   CLI and reusable backend for hybrid document ranking.
+- `association_analysis.py`
+  CLI and reusable functions for advanced rank relationship analysis.
 - `ui/app.py`
   Flask entry point for the web search UI.
 - `ui/templates/`, `ui/static/`, `ui/services/`
@@ -68,7 +70,7 @@ pip install -r .\requrements.txt
 Notes:
 
 - The dependency file is intentionally named `requrements.txt` in the repo.
-- The current retrieval stack expects `Flask`, `pandas`, `numpy`, `pyarrow`, `rank-bm25`, `sentence-transformers`, and `spacy`, all of which are now listed there.
+- The current retrieval stack expects `Flask`, `pandas`, `numpy`, `pyarrow`, `rank-bm25`, `sentence-transformers`, `spacy`, `matplotlib`, `scipy`, `scikit-learn`, and `pwlf`, all of which are now listed there.
 - The current dense retrieval path is CPU-oriented. Do not assume CUDA support.
 
 ## End-To-End Workflow
@@ -257,7 +259,7 @@ The app runs on:
 
 Current UI behavior:
 
-- header navigation between the Query and Features areas
+- header navigation between the Query, Rank Relationship, Content Change Experiments, and Content Features areas
 - search bar above the results area
 - autocomplete suggestions sourced from `rankings/queries.json`
 - new queries are executed once and then reused
@@ -265,8 +267,77 @@ Current UI behavior:
 - client-side sorting by results-table column
 - Wikipedia article links open in a new tab
 - saved parquet download for the currently selected query
+- temporary content-change experiments for a selected query and article
+- temporary add/remove link experiments by Wikipedia page ID
 - article-level feature search by Wikipedia page ID or article name
 - article feature display sourced from `data/content_features/`
+- rank relationship analysis against average rank across all saved full-ranking queries
+- rank-feature plots for selected saved-query collections
+- cached plot reuse under `rankings/content_feature_rank_plots/`
+
+The Rank Relationship page runs the advanced association pipeline from:
+
+- [association_analysis.py](association_analysis.py)
+
+It averages rank and hybrid score across all saved full-ranking queries per article, then uses `avg_rank` as the target variable. The pipeline runs:
+
+- Spearman and Kendall correlation
+- normalized mutual information
+- partial Spearman correlation controlling for other numeric features
+- Mann-Whitney top-10% and top-20% separation tests
+- two-segment piecewise breakpoint detection with `pwlf`
+- derived ratio feature Spearman correlations
+
+Saved Rank Relationship outputs are cached under `rankings/rank_relationship/` and include:
+
+- `association_summary.csv`
+- `dot_plot.png`
+- `diverging_bar.png`
+- `model_correlations.csv`
+- `model_importance.csv`
+- `model_correlation_heatmaps.png`
+- `model_importance_heatmaps.png`
+
+The model-comparison heatmaps use the ranking components available in each saved ranking file:
+
+- `hybrid`
+- `bm25`
+- `semantic`
+- `pagerank`
+
+For each component, the UI computes average per-article component rank and score across saved queries, then plots feature-rank correlations, feature-score correlations, random-forest feature importance, and permutation feature importance.
+
+The standalone CLI accepts feature and ranking CSV paths:
+
+```powershell
+python .\association_analysis.py .\features.csv .\rankings.csv
+```
+
+By default the CLI writes `results/association_summary.csv`, `results/dot_plot.png`, and `results/diverging_bar.png`.
+
+The Content Change Experiments page lets you select a saved full-ranking query, choose any article by page ID or title, edit its text in a browser editor, and submit a temporary reranking experiment. The experiment does not modify corpus files, graph files, saved ranking parquet files, or `rankings/queries.json`.
+
+Experiment scoring behavior:
+
+- edited text recomputes the selected article's BM25 score using the stored BM25 IDF/length statistics
+- edited text recomputes the selected article's MiniLM score by sentence-packing the temporary text into `512` word chunks
+- link additions/removals are accepted as page IDs for outgoing links from the selected article or incoming links toward it
+- link edits use a local PageRank edge-contribution approximation for instant feedback instead of recomputing the full graph PageRank
+- the UI displays the baseline rank, experimental rank, rank movement statement, component score deltas, local link effects, and an experimental ranking preview
+
+The Content Features area opens on the saved-query feature plot workflow and currently has two subsections:
+
+- `Rank Feature Plots` lets you select saved queries and a plot kind, then joins their top `100` ranked articles to content features.
+- `Show Article Level Features` displays one article's metrics from `data/content_features/`.
+
+Available rank-feature plot kinds:
+
+- `Ribbon plots` create one `plot_{feature_name}.png` per numeric feature with a rolling median, IQR band, and 10th-90th percentile band.
+- `Per-query overlay` creates one `overlay_{feature_name}.png` per numeric feature with faint query-level rolling medians and a bold aggregate rolling median.
+- `Feature consistency heatmap` creates one `heatmap.png` covering all numeric features across rank buckets `1-25`, `26-50`, `51-75`, and `76-100`.
+- `Violin plots` create one `violin_{feature_name}.png` per numeric feature showing the feature value distribution across those same four rank buckets.
+
+Rank feature plots use a centered rolling window of `50` rows with `min_periods=10`, a steelblue matplotlib style, and a summary table comparing median feature values in ranks `1-25` against ranks `76-100`. Selecting the same query collection and plot kind again reuses the existing cached plot folder instead of regenerating images.
 
 ## Retrieval Design
 

@@ -26,10 +26,22 @@
             Query
           </a>
           <a
-            class="primary-nav-link{% if request.endpoint in ['features', 'article_features', 'article_feature_detail', 'article_suggestions'] %} is-active{% endif %}"
+            class="primary-nav-link{% if request.endpoint in ['rank_relationship', 'run_rank_relationship', 'rank_relationship_results', 'rank_relationship_output'] %} is-active{% endif %}"
+            href="{{ url_for('rank_relationship') }}"
+          >
+            Rank Relationship
+          </a>
+          <a
+            class="primary-nav-link{% if request.endpoint in ['content_change_experiments', 'select_content_change_experiment_article', 'run_content_change_experiment'] %} is-active{% endif %}"
+            href="{{ url_for('content_change_experiments') }}"
+          >
+            Content Change Experiments
+          </a>
+          <a
+            class="primary-nav-link{% if request.endpoint in ['features', 'article_features', 'article_feature_detail', 'article_suggestions', 'rank_feature_plots', 'rank_feature_plot_image'] %} is-active{% endif %}"
             href="{{ url_for('features') }}"
           >
-            Features
+            Content Features
           </a>
         </nav>
       </header>
@@ -37,5 +49,6 @@
     </div>
     <script src="{{ url_for('static', filename='js/search.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/features.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/experiments.js') }}" defer></script>
   </body>
 </html>

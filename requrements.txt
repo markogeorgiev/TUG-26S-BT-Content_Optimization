@@ -11,3 +11,7 @@ sentence-transformers
 Flask
 rank_bm25
 sentence_transformers
+matplotlib
+scipy
+scikit-learn
+pwlf
