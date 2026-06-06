@@ -66,15 +66,7 @@
     - Then I need to figure out some queries to execute in order to have a good collection which we can model. 
 2. The WebUI should display statistics of content on a per content level (content features defined in III). 
 3. It is in this phase that we should execute a collection of queries which we will later analyze. We choose: 
-    - Are birds good pets?
-    - Best dogs for small apartments
-    - The most popular orange cat
-    - Low maintenance pets for beginners
-    - What should you feed a chameleon?
-    - Can you keep a fish as a pet?
-    - The most common lizard that people keep as a pet
-    - Easy to manage parrots
-
+    - A list of queries
 
 
 ## IV. Analysis of Ranking 
@@ -84,11 +76,12 @@
     - A consideration is that we expect differnt articles that both rank higher to have very different values for a single metric. 
         - This means tha for example different articles ranking 1 for different queires may have very different number of words, and we need to find a way to model this. So we are interested in modeling actuall correlaion as opposed to coincidence. 
     - The question is: Among articles that rank highly, is this feature consistently high/low, or is it unstable?
+    - This also means comparing lower ranked articles agains higher ranked ones and planning what kind of changes will be implemented in order to perform optimziation. 
     
 
 X. Considering the content charateristics defined in section III, analyze the relationship between these charateristics and ranking. 
     - Figure out how to model relationships like these most effectively. 
-    - Look into Spearmans ...//TODO
+    - Look into Spearmans 
 
 ## V. Web UI v2
 
@@ -101,4 +94,4 @@ Extend the Web UI to allow for informed informed content optimization.
 ### Change Content Based on [SOMETHING]
 
 ## VI. Informed Content Change Experiments
-1. Evaluate whether informaed changes in content charateristics had the expected effect on content ranking. How chaning the features detaile in II, affected ranknig. Was it the way we expected it would, based on VI. 
+1. Evaluate whether informaed changes in content charateristics had the expected effect on content ranking. How chaning the features detaile in II, affected ranking. Was it the way we expected it would, based on VI. 

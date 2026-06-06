@@ -336,6 +336,30 @@
         "remaining_chunks_mean": 0.05
       },
       "result_file": "rankings\\initial_rankings\\q000014_how-often-should-i-take-dog-to-the-vet.parquet"
+    },
+    {
+      "query_id": "q000015",
+      "query_text": "best exotic pet",
+      "query_key": "best exotic pet",
+      "query_slug": "best-exotic-pet",
+      "executed_at_utc": "2026-06-05T20:35:14Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000015_best-exotic-pet.parquet"
     }
   ]
 }

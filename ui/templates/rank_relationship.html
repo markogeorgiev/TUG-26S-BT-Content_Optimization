@@ -6,6 +6,21 @@
 
 {% block content %}
   <main class="page-stack">
+    <section class="feature-section-header">
+      <div>
+        <p class="section-label">Rank Relationship</p>
+        <h2>Advanced Rank Association Analysis</h2>
+      </div>
+      <nav class="secondary-nav" aria-label="Rank relationship navigation">
+        <a class="secondary-nav-link is-active" href="{{ url_for('rank_relationship') }}">
+          Advanced Rank Association Analysis
+        </a>
+        <a class="secondary-nav-link" href="{{ url_for('rank_relationship_feature_plots') }}">
+          Rank Feature Plots
+        </a>
+      </nav>
+    </section>
+
     <section class="panel search-panel">
       <div class="search-panel-header">
         <div>

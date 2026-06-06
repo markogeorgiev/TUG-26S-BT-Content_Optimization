@@ -11,6 +11,7 @@ from typing import Any
 import pandas as pd
 
 from retriever import run_hybrid_rankings as ranking_backend
+from ui.services.ranking_ui_service import build_per_model_ranking
 
 
 CONTENT_FEATURES_DIR = ranking_backend.REPO_ROOT / "data" / "content_features"
@@ -18,6 +19,7 @@ CONTENT_FEATURES_PARQUET_FILE = CONTENT_FEATURES_DIR / "content_features.parquet
 CONTENT_FEATURES_CSV_FILE = CONTENT_FEATURES_DIR / "content_features.csv"
 CONTENT_FEATURES_CONFIG_FILE = CONTENT_FEATURES_DIR / "content_features_config.json"
 RANK_FEATURE_PLOTS_DIR = ranking_backend.RANKINGS_DIR / "content_feature_rank_plots"
+PER_MODEL_RANK_FEATURE_PLOTS_DIR = ranking_backend.RANKINGS_DIR / "per_model_rank_feature_plots"
 
 RANK_FEATURE_MAX_RANK = 100
 RANK_FEATURE_ROLLING_WINDOW = 50
@@ -48,6 +50,22 @@ RANK_FEATURE_PLOT_KINDS = [
         "description": "Per-feature distribution violins across the four top-100 rank buckets.",
     },
 ]
+PER_MODEL_RANK_FEATURE_OPTIONS = [
+    {
+        "value": "bm25",
+        "label": "BM25 only",
+        "description": "Use BM25-only ranking positions before plotting feature behavior.",
+    },
+    {
+        "value": "sbert",
+        "label": "SBERT only",
+        "description": "Use SBERT-only ranking positions before plotting feature behavior.",
+    },
+]
+PER_MODEL_RANK_FEATURE_SCORE_COLUMNS = {
+    "bm25": ["bm25_score_raw", "bm25_score_norm"],
+    "sbert": ["semantic_score_raw", "semantic_score_norm"],
+}
 STEELBLUE = "#4682b4"
 
 IDENTITY_FEATURE_COLUMNS = {
@@ -154,12 +172,28 @@ def _normalize_plot_kind(plot_kind: str | None) -> str:
     return normalized
 
 
-def _safe_collection_key(query_ids: list[str], plot_kind: str) -> str:
+def _normalize_per_model_rank_feature_key(model_key: str | None) -> str:
+    normalized = str(model_key or "").strip().lower()
+    allowed = {option["value"] for option in PER_MODEL_RANK_FEATURE_OPTIONS}
+    if normalized not in allowed:
+        raise ValueError(
+            "Unknown per-model rank feature mode. Expected one of: "
+            + ", ".join(sorted(allowed))
+        )
+    return normalized
+
+
+def _safe_collection_key(
+    query_ids: list[str],
+    plot_kind: str,
+    extra_parts: list[str] | None = None,
+) -> str:
     key_parts = [
         plot_kind,
         f"max_rank={RANK_FEATURE_MAX_RANK}",
         f"window={RANK_FEATURE_ROLLING_WINDOW}",
         f"min_periods={RANK_FEATURE_MIN_PERIODS}",
+        *(extra_parts or []),
         *query_ids,
     ]
     digest = hashlib.sha256("|".join(key_parts).encode("utf-8")).hexdigest()[:16]
@@ -236,16 +270,20 @@ def _normalize_query_ids(query_ids: list[str] | tuple[str, ...]) -> list[str]:
     return normalized
 
 
-def _plot_metadata_path(collection_key: str) -> Path:
-    return RANK_FEATURE_PLOTS_DIR / collection_key / "metadata.json"
+def _plot_metadata_path(collection_key: str, base_dir: Path = RANK_FEATURE_PLOTS_DIR) -> Path:
+    return base_dir / collection_key / "metadata.json"
 
 
-def _plot_output_dir(collection_key: str) -> Path:
-    return RANK_FEATURE_PLOTS_DIR / collection_key
+def _plot_output_dir(collection_key: str, base_dir: Path = RANK_FEATURE_PLOTS_DIR) -> Path:
+    return base_dir / collection_key
 
 
-def _load_plot_metadata(collection_key: str, plot_kind: str) -> dict[str, Any] | None:
-    metadata_path = _plot_metadata_path(collection_key)
+def _load_plot_metadata(
+    collection_key: str,
+    plot_kind: str,
+    base_dir: Path = RANK_FEATURE_PLOTS_DIR,
+) -> dict[str, Any] | None:
+    metadata_path = _plot_metadata_path(collection_key, base_dir=base_dir)
     if not metadata_path.exists():
         return None
     try:
@@ -253,7 +291,7 @@ def _load_plot_metadata(collection_key: str, plot_kind: str) -> dict[str, Any] |
     except (OSError, TypeError, json.JSONDecodeError):
         return None
 
-    output_dir = _plot_output_dir(collection_key)
+    output_dir = _plot_output_dir(collection_key, base_dir=base_dir)
     plot_files = metadata.get("plot_files") or []
     if not plot_files:
         return None
@@ -274,8 +312,12 @@ def _load_plot_metadata(collection_key: str, plot_kind: str) -> dict[str, Any] |
     return metadata
 
 
-def _save_plot_metadata(collection_key: str, metadata: dict[str, Any]) -> None:
-    metadata_path = _plot_metadata_path(collection_key)
+def _save_plot_metadata(
+    collection_key: str,
+    metadata: dict[str, Any],
+    base_dir: Path = RANK_FEATURE_PLOTS_DIR,
+) -> None:
+    metadata_path = _plot_metadata_path(collection_key, base_dir=base_dir)
     metadata_path.parent.mkdir(parents=True, exist_ok=True)
     metadata_path.write_text(
         json.dumps(metadata, indent=2, ensure_ascii=False),
@@ -362,6 +404,10 @@ def rank_feature_plot_kind_options() -> list[dict[str, str]]:
     return [dict(option) for option in RANK_FEATURE_PLOT_KINDS]
 
 
+def per_model_rank_feature_options() -> list[dict[str, str]]:
+    return [dict(option) for option in PER_MODEL_RANK_FEATURE_OPTIONS]
+
+
 def rank_feature_columns() -> list[str]:
     enriched = load_enriched_content_features()
     numeric_columns = enriched.select_dtypes(include=["number"]).columns
@@ -396,9 +442,74 @@ def _load_rank_rows(query_ids: list[str], max_rank: int) -> pd.DataFrame:
     return rank_rows
 
 
+def _load_per_model_rank_rows(query_ids: list[str], model_key: str, max_rank: int) -> pd.DataFrame:
+    normalized_model = _normalize_per_model_rank_feature_key(model_key)
+    records_by_id = _query_records_by_id()
+    ranking_columns = [
+        "rank",
+        "page_id",
+        "title",
+        *PER_MODEL_RANK_FEATURE_SCORE_COLUMNS[normalized_model],
+    ]
+    frames: list[pd.DataFrame] = []
+
+    for query_id in query_ids:
+        record = records_by_id[query_id]
+        result_path = _ranking_result_path(record)
+        ranking_df = pd.read_parquet(result_path, columns=ranking_columns)
+        ranking_df["page_id"] = ranking_df["page_id"].astype("int64")
+        reranked_df, _ = build_per_model_ranking(ranking_df, normalized_model)
+        rank_rows = (
+            reranked_df.loc[
+                reranked_df["model_rank"].between(1, max_rank),
+                ["model_rank", "page_id", "title"],
+            ]
+            .rename(columns={"model_rank": "rank"})
+            .copy()
+        )
+        rank_rows["query_id"] = query_id
+        rank_rows["query_text"] = record["query_text"]
+        frames.append(rank_rows)
+
+    if not frames:
+        return pd.DataFrame(columns=["rank", "page_id", "title", "query_id", "query_text"])
+
+    rank_rows = pd.concat(frames, ignore_index=True)
+    rank_rows["page_id"] = rank_rows["page_id"].astype("int64")
+    rank_rows["rank"] = rank_rows["rank"].astype("int64")
+    return rank_rows
+
+
 def load_rank_feature_frame(query_ids: list[str], max_rank: int = RANK_FEATURE_MAX_RANK) -> pd.DataFrame:
     normalized_query_ids = _normalize_query_ids(query_ids)
     rank_rows = _load_rank_rows(normalized_query_ids, max_rank=max_rank)
+    if rank_rows.empty:
+        raise ValueError("Selected rankings did not contain any rows to analyze.")
+
+    feature_columns = rank_feature_columns()
+    feature_lookup = load_enriched_content_features()[["page_id", *feature_columns]].copy()
+    merged = rank_rows.merge(feature_lookup, on="page_id", how="left", validate="many_to_one")
+
+    missing_features = int(merged[feature_columns].isna().all(axis=1).sum())
+    if missing_features:
+        raise ValueError(
+            f"Could not map {missing_features:,} ranked articles to content features."
+        )
+
+    return merged.sort_values(["rank", "query_id", "page_id"]).reset_index(drop=True)
+
+
+def load_per_model_rank_feature_frame(
+    query_ids: list[str],
+    model_key: str,
+    max_rank: int = RANK_FEATURE_MAX_RANK,
+) -> pd.DataFrame:
+    normalized_query_ids = _normalize_query_ids(query_ids)
+    rank_rows = _load_per_model_rank_rows(
+        normalized_query_ids,
+        model_key=model_key,
+        max_rank=max_rank,
+    )
     if rank_rows.empty:
         raise ValueError("Selected rankings did not contain any rows to analyze.")
 
@@ -922,10 +1033,167 @@ def get_or_create_rank_feature_plots(
     return metadata
 
 
+def get_or_create_per_model_rank_feature_plots(
+    query_ids: list[str],
+    model_key: str,
+    plot_kind: str = DEFAULT_RANK_FEATURE_PLOT_KIND,
+) -> dict[str, Any]:
+    normalized_model = _normalize_per_model_rank_feature_key(model_key)
+    normalized_plot_kind = _normalize_plot_kind(plot_kind)
+    normalized_query_ids = _normalize_query_ids(query_ids)
+    collection_key = _safe_collection_key(
+        normalized_query_ids,
+        normalized_plot_kind,
+        extra_parts=[f"model={normalized_model}"],
+    )
+    cached_metadata = _load_plot_metadata(
+        collection_key,
+        normalized_plot_kind,
+        base_dir=PER_MODEL_RANK_FEATURE_PLOTS_DIR,
+    )
+    if cached_metadata is not None:
+        return cached_metadata
+
+    records_by_id = _query_records_by_id()
+    model_option = next(
+        option for option in PER_MODEL_RANK_FEATURE_OPTIONS if option["value"] == normalized_model
+    )
+    output_dir = _plot_output_dir(collection_key, base_dir=PER_MODEL_RANK_FEATURE_PLOTS_DIR)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    analysis_df = load_per_model_rank_feature_frame(
+        normalized_query_ids,
+        model_key=normalized_model,
+        max_rank=RANK_FEATURE_MAX_RANK,
+    )
+    features = rank_feature_columns()
+    plot_files: list[dict[str, Any]] = []
+
+    if normalized_plot_kind == "heatmap":
+        fig = plot_feature_consistency_heatmap(
+            analysis_df,
+            features,
+            max_rank=RANK_FEATURE_MAX_RANK,
+        )
+        file_name = "heatmap.png"
+        plot_path = output_dir / file_name
+        fig.savefig(plot_path, dpi=150)
+        import matplotlib.pyplot as plt
+
+        plt.close(fig)
+        plot_files.append(
+            {
+                "feature": "all_features",
+                "title": "Feature consistency heatmap",
+                "file_name": file_name,
+                "path": _relative_to_repo(plot_path),
+            }
+        )
+    else:
+        for feature in features:
+            if normalized_plot_kind == "violin":
+                fig = plot_feature_bucket_violin(
+                    analysis_df,
+                    feature,
+                    max_rank=RANK_FEATURE_MAX_RANK,
+                )
+                file_name = f"violin_{feature}.png"
+                title = f"{feature} distribution by rank bucket"
+            elif normalized_plot_kind == "overlay":
+                fig = plot_feature_query_overlay(
+                    analysis_df,
+                    feature,
+                    window=RANK_FEATURE_ROLLING_WINDOW,
+                    max_rank=RANK_FEATURE_MAX_RANK,
+                )
+                file_name = f"overlay_{feature}.png"
+                title = f"{feature} vs. Rank"
+            else:
+                fig = plot_feature_vs_rank(
+                    analysis_df,
+                    feature,
+                    window=RANK_FEATURE_ROLLING_WINDOW,
+                    max_rank=RANK_FEATURE_MAX_RANK,
+                )
+                file_name = f"plot_{feature}.png"
+                title = f"{feature} vs. Rank"
+
+            plot_path = output_dir / file_name
+            fig.savefig(plot_path, dpi=150)
+            import matplotlib.pyplot as plt
+
+            plt.close(fig)
+            plot_files.append(
+                {
+                    "feature": feature,
+                    "title": title,
+                    "file_name": file_name,
+                    "path": _relative_to_repo(plot_path),
+                }
+            )
+
+    summary_window = _median_drop_window(RANK_FEATURE_MAX_RANK)
+    summary = _median_drop_summary(
+        analysis_df,
+        features,
+        max_rank=RANK_FEATURE_MAX_RANK,
+    )
+    metadata = {
+        "schema_version": 1,
+        "collection_key": collection_key,
+        "cache_status": "generated",
+        "generated_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "output_dir": _relative_to_repo(output_dir),
+        "plot_kind": normalized_plot_kind,
+        "plot_kind_label": next(
+            option["label"]
+            for option in RANK_FEATURE_PLOT_KINDS
+            if option["value"] == normalized_plot_kind
+        ),
+        "selected_model": normalized_model,
+        "selected_model_label": model_option["label"],
+        "query_ids": normalized_query_ids,
+        "queries": [records_by_id[query_id] for query_id in normalized_query_ids],
+        "rank_window": {
+            "max_rank": RANK_FEATURE_MAX_RANK,
+            "rolling_window": RANK_FEATURE_ROLLING_WINDOW,
+            "center": True,
+            "min_periods": RANK_FEATURE_MIN_PERIODS,
+        },
+        "median_drop_window": summary_window,
+        "row_count": int(len(analysis_df)),
+        "feature_count": int(len(features)),
+        "features": features,
+        "plot_files": plot_files,
+        "median_drop_summary": summary,
+    }
+    _save_plot_metadata(
+        collection_key,
+        metadata,
+        base_dir=PER_MODEL_RANK_FEATURE_PLOTS_DIR,
+    )
+    return metadata
+
+
 def resolve_rank_feature_plot_path(collection_key: str, file_name: str) -> Path:
     normalized_collection_key = _validate_collection_key(collection_key)
     normalized_file_name = _validate_plot_file_name(file_name)
     plot_path = _plot_output_dir(normalized_collection_key) / normalized_file_name
+    if not plot_path.exists():
+        raise FileNotFoundError(f"Missing plot file: {plot_path}")
+    return plot_path
+
+
+def resolve_per_model_rank_feature_plot_path(collection_key: str, file_name: str) -> Path:
+    normalized_collection_key = _validate_collection_key(collection_key)
+    normalized_file_name = _validate_plot_file_name(file_name)
+    plot_path = (
+        _plot_output_dir(
+            normalized_collection_key,
+            base_dir=PER_MODEL_RANK_FEATURE_PLOTS_DIR,
+        )
+        / normalized_file_name
+    )
     if not plot_path.exists():
         raise FileNotFoundError(f"Missing plot file: {plot_path}")
     return plot_path

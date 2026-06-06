@@ -8,42 +8,58 @@
   </head>
   <body>
     <div class="shell">
+      {% set primary_items = build_primary_nav(workspace_key|default(''), section_key|default('')) %}
+      {% set section_items = build_workspace_section_nav(workspace_key|default(''), section_key|default('')) %}
       <header class="site-header">
-        <div class="topbar">
-          <div>
+        <section class="header-hero">
+          <div class="header-hero-copy">
             <p class="eyebrow">Wikipedia Pets</p>
             <h1>Content Optimization Workspace</h1>
+            <p class="header-hero-text">
+              The interface is organized around ranking models first, so query execution,
+              feature plots, relationship analysis, and experiments stay grouped by the
+              retrieval view you are actually studying.
+            </p>
           </div>
-          <p class="topbar-note">
-            {% block topbar_note %}BM25 0.4 + MiniLM 0.4 + PageRank 0.2{% endblock %}
-          </p>
-        </div>
-        <nav class="primary-nav" aria-label="Primary navigation">
-          <a
-            class="primary-nav-link{% if request.endpoint in ['index', 'search', 'query_results', 'download_query_results'] %} is-active{% endif %}"
-            href="{{ url_for('index') }}"
-          >
-            Query
-          </a>
-          <a
-            class="primary-nav-link{% if request.endpoint in ['rank_relationship', 'run_rank_relationship', 'rank_relationship_results', 'rank_relationship_output'] %} is-active{% endif %}"
-            href="{{ url_for('rank_relationship') }}"
-          >
-            Rank Relationship
-          </a>
-          <a
-            class="primary-nav-link{% if request.endpoint in ['content_change_experiments', 'select_content_change_experiment_article', 'run_content_change_experiment'] %} is-active{% endif %}"
-            href="{{ url_for('content_change_experiments') }}"
-          >
-            Content Change Experiments
-          </a>
-          <a
-            class="primary-nav-link{% if request.endpoint in ['features', 'article_features', 'article_feature_detail', 'article_suggestions', 'rank_feature_plots', 'rank_feature_plot_image'] %} is-active{% endif %}"
-            href="{{ url_for('features') }}"
-          >
-            Content Features
-          </a>
+          <div class="header-status-card">
+            <span class="header-status-label">Current View</span>
+            <strong>
+              {% if section_key == 'content_features' %}
+                Content Features
+              {% elif workspace_config %}
+                {{ workspace_config.label }}
+              {% else %}
+                Workspace
+              {% endif %}
+            </strong>
+            <p>
+              {% if header_note is defined and header_note %}
+                {{ header_note }}
+              {% else %}
+                {% block topbar_note %}BM25 0.4 + MiniLM 0.4 + PageRank 0.2{% endblock %}
+              {% endif %}
+            </p>
+          </div>
+        </section>
+
+        <nav class="workspace-switcher" aria-label="Workspace navigation">
+          {% for item in primary_items %}
+            <a class="workspace-tab{% if item.is_active %} is-active{% endif %}" href="{{ item.url }}">
+              <span class="workspace-tab-label">{{ item.label }}</span>
+              <small>{{ item.note }}</small>
+            </a>
+          {% endfor %}
         </nav>
+
+        {% if section_items %}
+          <nav class="section-nav" aria-label="Workspace sections">
+            {% for item in section_items %}
+              <a class="section-nav-link{% if item.is_active %} is-active{% endif %}" href="{{ item.url }}">
+                {{ item.label }}
+              </a>
+            {% endfor %}
+          </nav>
+        {% endif %}
       </header>
       {% block content %}{% endblock %}
     </div>

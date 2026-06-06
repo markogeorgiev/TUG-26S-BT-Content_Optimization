@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Per Model Ranking{% endblock %}
+{% block topbar_note %}Inspect BM25-only, SBERT-only, or PageRank-only rankings{% endblock %}
+
+{% block content %}
+  <main class="page-stack">
+    <section class="panel search-panel">
+      <div class="search-panel-header">
+        <div>
+          <p class="section-label">Per Model Ranking</p>
+          <h2>Run or Reuse a Query, Then Re-Rank by One Model</h2>
+        </div>
+        <p class="helper-text search-panel-note">
+          This page reuses the same saved queries as the main Query page. If you run a brand-new query here, it is saved once and immediately becomes available there too.
+        </p>
+      </div>
+
+      <form class="search-form search-form-top" action="{{ url_for('per_model_search') }}" method="post" data-search-form>
+        <div class="search-grid model-search-grid">
+          <div class="search-field search-field-query">
+            <label class="field-label" for="per-model-query-input">Query</label>
+            <div class="query-box">
+              <input
+                id="per-model-query-input"
+                name="query"
+                type="text"
+                value="{{ current_query }}"
+                placeholder="Search the pets corpus..."
+                autocomplete="off"
+                spellcheck="false"
+                data-query-input
+                data-suggestions-url="{{ url_for('query_suggestions') }}"
+              >
+              <div class="suggestions" hidden data-suggestions></div>
+            </div>
+          </div>
+
+          <div class="search-field">
+            <label class="field-label" for="model-select">Ranking model</label>
+            <select id="model-select" name="model">
+              {% for option in model_options %}
+                <option value="{{ option.value }}" {% if option.value == selected_model %}selected{% endif %}>
+                  {{ option.label }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="search-field search-field-limit">
+            <label class="field-label" for="per-model-display-limit">Results to display</label>
+            <select id="per-model-display-limit" name="display_limit" data-display-limit-select>
+              {% for option in display_options %}
+                <option value="{{ option }}" {% if option|string == selected_display_value %}selected{% endif %}>
+                  Top {{ option }}
+                </option>
+              {% endfor %}
+              <option value="custom" {% if selected_display_value == 'custom' %}selected{% endif %}>
+                Other
+              </option>
+            </select>
+          </div>
+
+          <div class="search-field search-field-action">
+            <button type="submit" class="submit-button" data-submit-button>
+              View ranking
+            </button>
+          </div>
+        </div>
+
+        <div class="custom-limit-box{% if selected_display_value != 'custom' %} is-hidden{% endif %}" data-custom-limit-box>
+          <label class="field-label" for="per-model-display-limit-custom">Custom k</label>
+          <input
+            id="per-model-display-limit-custom"
+            name="display_limit_custom"
+            type="number"
+            min="1"
+            step="1"
+            value="{{ custom_display_limit }}"
+            placeholder="Enter any positive k"
+          >
+        </div>
+      </form>
+
+      {% if recent_queries %}
+        <div class="recent-query-strip">
+          <div class="results-header">
+            <div>
+              <p class="section-label">Recent Saved Queries</p>
+              <p class="helper-text">Pick one of the shared saved queries directly, or type a new query above.</p>
+            </div>
+          </div>
+          <div class="selected-query-list">
+            {% for item in recent_queries %}
+              <a
+                class="selected-query-pill"
+                href="{{ url_for('per_model_query_results', query_id=item.query_id, model=selected_model, display=display_limit) }}"
+              >
+                <strong>{{ item.query_id }}</strong>
+                {{ item.query_text }}
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    </section>
+
+    <section class="workspace">
+      {% if error_message %}
+        <div class="status-banner error">{{ error_message }}</div>
+      {% endif %}
+
+      {% if query_record %}
+        <section class="summary-grid">
+          <article class="summary-card">
+            <p class="section-label">Selected Query</p>
+            <h2>{{ query_record.query_text }}</h2>
+            <p class="summary-meta">{{ query_record.query_id }} | {{ total_results }} stored rows</p>
+          </article>
+          <article class="summary-card">
+            <p class="section-label">Ranking Basis</p>
+            <h2>{{ model_info.label }}</h2>
+            <p class="summary-meta">{{ model_info.summary }}</p>
+          </article>
+          <article class="summary-card">
+            <p class="section-label">Storage</p>
+            <h2>{{ 'Full ranking' if query_record.is_full_ranking else 'Partial ranking' }}</h2>
+            <p class="summary-meta">{{ query_record.result_file }}</p>
+          </article>
+          <article class="summary-card">
+            <p class="section-label">Execution Mode</p>
+            {% if created_state == 'created' %}
+              <h2>Fresh ranking saved</h2>
+              <p class="summary-meta">This query was new and now appears in the main Query page history too.</p>
+            {% elif created_state == 'reused' %}
+              <h2>Existing ranking reused</h2>
+              <p class="summary-meta">The saved query file was reused, then reordered by the selected model only.</p>
+            {% else %}
+              <h2>Stored ranking loaded</h2>
+              <p class="summary-meta">No extra parquet file is created here; this page only changes the ordering.</p>
+            {% endif %}
+          </article>
+        </section>
+
+        {% if not query_record.is_full_ranking %}
+          <div class="status-banner warning">
+            This query was stored before the full-ranking rule was enabled, so this model-only view is limited to the saved partial result set.
+          </div>
+        {% endif %}
+      {% endif %}
+
+      {% include "partials/per_model_results_table.html" %}
+    </section>
+  </main>
+{% endblock %}

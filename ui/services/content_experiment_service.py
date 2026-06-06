@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 
 from retriever import run_hybrid_rankings as ranking_backend
+from ui.services.ranking_ui_service import build_per_model_ranking, get_per_model_config
 
 
 CONTENT_EXPERIMENT_PREVIEW_LIMIT = 25
@@ -25,6 +26,16 @@ TEXT_DIR_CANDIDATES = [
     ranking_backend.REPO_ROOT / "output" / "wikipedia-pets" / "texts",
 ]
 
+SCORE_COMPONENT_SPECS = [
+    ("Hybrid score", "hybrid_score", "score"),
+    ("BM25 raw", "bm25_score_raw", "score"),
+    ("BM25 normalized", "bm25_score_norm", "score"),
+    ("Semantic raw", "semantic_score_raw", "score"),
+    ("Semantic normalized", "semantic_score_norm", "score"),
+    ("PageRank raw", "pagerank", "score"),
+    ("PageRank normalized", "pagerank_norm", "score"),
+]
+
 
 @dataclass(frozen=True)
 class LinkEditRequest:
@@ -32,6 +43,136 @@ class LinkEditRequest:
     remove_outgoing_page_ids: list[int]
     add_incoming_page_ids: list[int]
     remove_incoming_page_ids: list[int]
+
+
+def _float_or_zero(value: Any) -> float:
+    cleaned = _clean_scalar(value)
+    if cleaned is None:
+        return 0.0
+    try:
+        return float(cleaned)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _numeric_series(results_df: pd.DataFrame, column_name: str) -> pd.Series:
+    if column_name not in results_df.columns:
+        raise ValueError(f"Saved ranking is missing the required column: {column_name}")
+    return pd.to_numeric(results_df[column_name], errors="coerce").replace(
+        [np.inf, -np.inf],
+        np.nan,
+    )
+
+
+def _experiment_view_metadata(model_key: str | None) -> dict[str, Any]:
+    normalized = str(model_key or "").strip().lower()
+    if normalized == "sbert":
+        model_config = get_per_model_config("sbert")
+        return {
+            "key": "sbert",
+            "view_label": "Dense",
+            "model_label": model_config["label"],
+            "rank_label": "Dense rank",
+            "score_label": model_config["score_label"],
+            "comparison_rank_label": "Hybrid rank",
+            "comparison_score_label": "Hybrid score",
+            "is_hybrid": False,
+        }
+    if normalized == "bm25":
+        model_config = get_per_model_config("bm25")
+        return {
+            "key": "bm25",
+            "view_label": "Sparse",
+            "model_label": model_config["label"],
+            "rank_label": "Sparse rank",
+            "score_label": model_config["score_label"],
+            "comparison_rank_label": "Hybrid rank",
+            "comparison_score_label": "Hybrid score",
+            "is_hybrid": False,
+        }
+    return {
+        "key": "hybrid",
+        "view_label": "Hybrid",
+        "model_label": "Hybrid",
+        "rank_label": "Hybrid rank",
+        "score_label": "Hybrid score",
+        "comparison_rank_label": None,
+        "comparison_score_label": None,
+        "is_hybrid": True,
+    }
+
+
+def _ordered_score_component_specs(model_key: str | None) -> list[tuple[str, str, str]]:
+    normalized = str(model_key or "").strip().lower()
+    if normalized == "sbert":
+        primary_columns = ["semantic_score_norm", "semantic_score_raw", "hybrid_score"]
+    elif normalized == "bm25":
+        primary_columns = ["bm25_score_norm", "bm25_score_raw", "hybrid_score"]
+    else:
+        primary_columns = ["hybrid_score", "bm25_score_norm", "semantic_score_norm"]
+
+    spec_lookup = {column: (label, column, value_format) for label, column, value_format in SCORE_COMPONENT_SPECS}
+    ordered_specs = [spec_lookup[column] for column in primary_columns if column in spec_lookup]
+    remaining_specs = [
+        spec
+        for spec in SCORE_COMPONENT_SPECS
+        if spec[1] not in set(primary_columns)
+    ]
+    return ordered_specs + remaining_specs
+
+
+def _score_component_rows(row: pd.Series, model_key: str | None) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for index, (label, column, value_format) in enumerate(_ordered_score_component_specs(model_key)):
+        rows.append(
+            {
+                "label": label,
+                "value": _float_or_zero(row.get(column)),
+                "format": value_format,
+                "is_primary": index == 0,
+            }
+        )
+    return rows
+
+
+def _build_selected_ranking_view(
+    ranking_df: pd.DataFrame,
+    model_key: str | None,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
+    metadata = _experiment_view_metadata(model_key)
+    if metadata["is_hybrid"]:
+        view = ranking_df.copy()
+        hybrid_rank = _numeric_series(view, "rank").fillna(len(view) + 1).astype("int64")
+        view["hybrid_rank"] = hybrid_rank
+        view["selected_rank"] = hybrid_rank
+        view["selected_score"] = _numeric_series(view, "hybrid_score")
+        view = view.sort_values(
+            ["selected_rank", "title"],
+            ascending=[True, True],
+            kind="mergesort",
+        ).reset_index(drop=True)
+        return view, metadata
+
+    reranked, _ = build_per_model_ranking(ranking_df, metadata["key"])
+    reranked["selected_rank"] = reranked["model_rank"].astype("int64")
+    reranked["selected_score"] = pd.to_numeric(reranked["model_score"], errors="coerce")
+    return reranked, metadata
+
+
+def _experiment_method_note(metadata: dict[str, Any]) -> str:
+    if metadata["is_hybrid"]:
+        return (
+            "Temporary experiment only. Content edits recompute the selected article's "
+            "BM25 and MiniLM document scores. Link edits use a local PageRank edge-contribution "
+            "approximation instead of recomputing global PageRank, so no corpus or graph files are changed."
+        )
+
+    return (
+        "Temporary experiment only. Content edits recompute the selected article's BM25 and MiniLM "
+        "document scores, link edits use a local PageRank edge-contribution approximation, and the "
+        f"displayed {metadata['view_label'].lower()} workspace reranks the temporary result with "
+        f"{metadata['model_label'].lower()} ordering. No corpus or graph files are changed."
+    )
 
 
 def _clean_scalar(value: Any) -> Any:
@@ -345,10 +486,15 @@ def get_experiment_article(page_id: int) -> dict[str, Any]:
     return article
 
 
-def get_article_baseline_ranking_entry(query_id: str, page_id: int) -> dict[str, Any]:
+def get_article_baseline_ranking_entry(
+    query_id: str,
+    page_id: int,
+    model_key: str | None = "hybrid",
+) -> dict[str, Any]:
     record = get_experiment_query_record(query_id)
     _, ranking_df = ranking_backend.load_ranking_by_query_id(query_id)
-    selected_rows = ranking_df.loc[ranking_df["page_id"].eq(int(page_id))]
+    selected_ranking, metadata = _build_selected_ranking_view(ranking_df, model_key)
+    selected_rows = selected_ranking.loc[selected_ranking["page_id"].eq(int(page_id))]
     if selected_rows.empty:
         raise ValueError(f"Page ID {page_id} is not present in ranking {query_id}.")
 
@@ -359,22 +505,28 @@ def get_article_baseline_ranking_entry(query_id: str, page_id: int) -> dict[str,
     if not matching_urls.empty:
         article_url = str(_clean_scalar(matching_urls.iloc[0]) or "")
 
-    components = [
-        ("Hybrid score", "hybrid_score", "score"),
-        ("BM25 raw", "bm25_score_raw", "score"),
-        ("BM25 normalized", "bm25_score_norm", "score"),
-        ("Semantic raw", "semantic_score_raw", "score"),
-        ("Semantic normalized", "semantic_score_norm", "score"),
-        ("PageRank raw", "pagerank", "score"),
-        ("PageRank normalized", "pagerank_norm", "score"),
-    ]
-
     return {
         "query_id": record["query_id"],
         "query_text": record["query_text"],
         "result_file": record["result_file"],
         "total_results": int(len(ranking_df)),
-        "rank": int(row["rank"]),
+        "selected_view_label": metadata["view_label"],
+        "selected_rank_label": metadata["rank_label"],
+        "selected_score_label": metadata["score_label"],
+        "comparison_rank_label": metadata["comparison_rank_label"],
+        "comparison_score_label": metadata["comparison_score_label"],
+        "rank": int(row["selected_rank"]),
+        "score": _float_or_zero(row.get("selected_score")),
+        "comparison_rank": (
+            int(row["hybrid_rank"])
+            if metadata["comparison_rank_label"]
+            else None
+        ),
+        "comparison_score": (
+            _float_or_zero(row.get("hybrid_score"))
+            if metadata["comparison_score_label"]
+            else None
+        ),
         "doc_id": int(row["doc_id"]),
         "page_id": int(row["page_id"]),
         "title": str(row["title"]),
@@ -384,14 +536,7 @@ def get_article_baseline_ranking_entry(query_id: str, page_id: int) -> dict[str,
         "matched_query_tokens": str(row.get("matched_query_tokens") or ""),
         "pagerank_rank": _clean_scalar(row.get("pagerank_rank")),
         "article_url": article_url,
-        "components": [
-            {
-                "label": label,
-                "value": float(row.get(column, 0.0) or 0.0),
-                "format": value_format,
-            }
-            for label, column, value_format in components
-        ],
+        "components": _score_component_rows(row, metadata["key"]),
     }
 
 
@@ -828,26 +973,22 @@ def _movement_statement(title: str, baseline_rank: int, experiment_rank: int) ->
     )
 
 
-def _component_delta_rows(baseline_row: pd.Series, experiment_row: pd.Series) -> list[dict[str, Any]]:
-    components = [
-        ("Hybrid score", "hybrid_score"),
-        ("BM25 raw", "bm25_score_raw"),
-        ("BM25 normalized", "bm25_score_norm"),
-        ("Semantic raw", "semantic_score_raw"),
-        ("Semantic normalized", "semantic_score_norm"),
-        ("PageRank raw", "pagerank"),
-        ("PageRank normalized", "pagerank_norm"),
-    ]
+def _component_delta_rows(
+    baseline_row: pd.Series,
+    experiment_row: pd.Series,
+    model_key: str | None,
+) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
-    for label, column in components:
-        before = float(baseline_row.get(column, 0.0) or 0.0)
-        after = float(experiment_row.get(column, 0.0) or 0.0)
+    for index, (label, column, _) in enumerate(_ordered_score_component_specs(model_key)):
+        before = _float_or_zero(baseline_row.get(column))
+        after = _float_or_zero(experiment_row.get(column))
         rows.append(
             {
                 "label": label,
                 "before": before,
                 "after": after,
                 "delta": after - before,
+                "is_primary": index == 0,
             }
         )
     return rows
@@ -867,11 +1008,13 @@ def run_content_change_experiment(
     page_id: int,
     edited_text: str,
     link_edits: LinkEditRequest,
+    model_key: str | None = "hybrid",
 ) -> dict[str, Any]:
     record = get_experiment_query_record(query_id)
     article = get_experiment_article(page_id)
     backend_record, baseline_ranking = ranking_backend.load_ranking_by_query_id(query_id)
     query_text = str(backend_record.get("query_text") or record["query_text"])
+    metadata = _experiment_view_metadata(model_key)
 
     selected_mask = baseline_ranking["page_id"].eq(int(page_id))
     if not selected_mask.any():
@@ -880,10 +1023,14 @@ def run_content_change_experiment(
             "Content experiments require the article to exist in the saved full ranking."
         )
 
-    selected_baseline_row = baseline_ranking.loc[selected_mask].iloc[0].copy()
+    baseline_selected_view, _ = _build_selected_ranking_view(baseline_ranking, model_key)
+    selected_baseline_row = baseline_selected_view.loc[
+        baseline_selected_view["page_id"].eq(int(page_id))
+    ].iloc[0].copy()
+
     working = baseline_ranking.copy()
-    working["baseline_rank"] = working["rank"].astype("int64")
-    working["baseline_hybrid_score"] = working["hybrid_score"].astype(float)
+    working["baseline_hybrid_rank"] = _numeric_series(working, "rank").fillna(len(working) + 1).astype("int64")
+    working["baseline_hybrid_score"] = _numeric_series(working, "hybrid_score").fillna(0.0)
 
     original_text = str(article["document_text"] or "")
     content_changed = (
@@ -936,18 +1083,47 @@ def run_content_change_experiment(
         ],
         ascending=[False, False, False, False, True],
     ).reset_index(drop=True)
-    working["experiment_rank"] = np.arange(1, len(working) + 1)
+    working["experiment_hybrid_rank"] = np.arange(1, len(working) + 1)
+    working["rank"] = working["experiment_hybrid_rank"]
 
-    selected_experiment_row = working.loc[working["page_id"].eq(int(page_id))].iloc[0].copy()
-    baseline_rank = int(selected_baseline_row["rank"])
-    experiment_rank = int(selected_experiment_row["experiment_rank"])
+    experiment_selected_view, _ = _build_selected_ranking_view(working, model_key)
+    experiment_selected_view = experiment_selected_view.merge(
+        baseline_selected_view.loc[:, ["page_id", "selected_rank", "selected_score"]].rename(
+            columns={
+                "selected_rank": "baseline_selected_rank",
+                "selected_score": "baseline_selected_score",
+            }
+        ),
+        on="page_id",
+        how="left",
+    )
+    experiment_selected_view = experiment_selected_view.rename(
+        columns={
+            "selected_rank": "experiment_selected_rank",
+            "selected_score": "experiment_selected_score",
+        }
+    )
+    experiment_selected_view["rank_delta"] = (
+        experiment_selected_view["baseline_selected_rank"].astype("int64")
+        - experiment_selected_view["experiment_selected_rank"].astype("int64")
+    )
+    experiment_selected_view["comparison_rank_delta"] = (
+        experiment_selected_view["baseline_hybrid_rank"].astype("int64")
+        - experiment_selected_view["hybrid_rank"].astype("int64")
+    )
+
+    selected_experiment_row = experiment_selected_view.loc[
+        experiment_selected_view["page_id"].eq(int(page_id))
+    ].iloc[0].copy()
+    baseline_rank = int(selected_baseline_row["selected_rank"])
+    experiment_rank = int(selected_experiment_row["experiment_selected_rank"])
     statement, movement_direction, rank_delta = _movement_statement(
         str(article["title"]),
         baseline_rank,
         experiment_rank,
     )
 
-    preview = working.head(CONTENT_EXPERIMENT_PREVIEW_LIMIT).copy()
+    preview = experiment_selected_view.head(CONTENT_EXPERIMENT_PREVIEW_LIMIT).copy()
     if int(page_id) not in set(preview["page_id"].astype(int)):
         preview = pd.concat(
             [preview, selected_experiment_row.to_frame().T],
@@ -956,11 +1132,16 @@ def run_content_change_experiment(
 
     preview = _attach_article_urls(preview)
     preview["is_selected_article"] = preview["page_id"].astype(int).eq(int(page_id))
-    preview["rank_delta"] = preview["baseline_rank"].astype(int) - preview["experiment_rank"].astype(int)
 
     return {
         "query": record,
         "article": article,
+        "selected_view_label": metadata["view_label"],
+        "selected_model_label": metadata["model_label"],
+        "selected_rank_label": metadata["rank_label"],
+        "selected_score_label": metadata["score_label"],
+        "comparison_rank_label": metadata["comparison_rank_label"],
+        "comparison_score_label": metadata["comparison_score_label"],
         "content_changed": content_changed,
         "link_warnings": link_warnings,
         "link_effect_rows": link_effect_rows,
@@ -969,19 +1150,41 @@ def run_content_change_experiment(
         "rank_delta": rank_delta,
         "baseline_rank": baseline_rank,
         "experiment_rank": experiment_rank,
-        "baseline_hybrid_score": float(selected_baseline_row["hybrid_score"]),
-        "experiment_hybrid_score": float(selected_experiment_row["hybrid_score"]),
+        "baseline_selected_score": _float_or_zero(selected_baseline_row.get("selected_score")),
+        "experiment_selected_score": _float_or_zero(selected_experiment_row.get("experiment_selected_score")),
+        "baseline_comparison_rank": (
+            int(selected_experiment_row["baseline_hybrid_rank"])
+            if metadata["comparison_rank_label"]
+            else None
+        ),
+        "experiment_comparison_rank": (
+            int(selected_experiment_row["hybrid_rank"])
+            if metadata["comparison_rank_label"]
+            else None
+        ),
+        "comparison_rank_delta": (
+            int(selected_experiment_row["comparison_rank_delta"])
+            if metadata["comparison_rank_label"]
+            else None
+        ),
+        "baseline_comparison_score": (
+            _float_or_zero(selected_experiment_row.get("baseline_hybrid_score"))
+            if metadata["comparison_score_label"]
+            else None
+        ),
+        "experiment_comparison_score": (
+            _float_or_zero(selected_experiment_row.get("hybrid_score"))
+            if metadata["comparison_score_label"]
+            else None
+        ),
         "component_deltas": _component_delta_rows(
             selected_baseline_row,
             selected_experiment_row,
+            model_key,
         ),
         "preview_rows": [
             {key: _clean_scalar(value) for key, value in row.items()}
             for row in preview.to_dict(orient="records")
         ],
-        "method_note": (
-            "Temporary experiment only. Content edits recompute the selected article's "
-            "BM25 and MiniLM document scores. Link edits use a local PageRank edge-contribution "
-            "approximation instead of recomputing global PageRank, so no corpus or graph files are changed."
-        ),
+        "method_note": _experiment_method_note(metadata),
     }

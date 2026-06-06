@@ -1,0 +1,240 @@
+{
+  "schema_version": 1,
+  "collection_key": "collection_b3d7aa3ed0a463c7",
+  "cache_status": "generated",
+  "generated_at_utc": "2026-06-06T14:46:18+00:00",
+  "output_dir": "rankings\\content_feature_rank_plots\\collection_b3d7aa3ed0a463c7",
+  "plot_kind": "ribbon",
+  "plot_kind_label": "Ribbon plots",
+  "query_ids": [
+    "q000003"
+  ],
+  "queries": [
+    {
+      "query_id": "q000003",
+      "query_text": "The most popular orange cat",
+      "query_slug": "the-most-popular-orange-cat",
+      "query_key": "the most popular orange cat",
+      "executed_at_utc": "2026-06-04T16:18:08Z",
+      "result_file": "rankings\\initial_rankings\\q000003_the-most-popular-orange-cat.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    }
+  ],
+  "rank_window": {
+    "max_rank": 100,
+    "rolling_window": 50,
+    "center": true,
+    "min_periods": 10
+  },
+  "median_drop_window": {
+    "top_start": 1,
+    "top_end": 25,
+    "comparison_start": 76,
+    "comparison_end": 100
+  },
+  "row_count": 100,
+  "feature_count": 15,
+  "features": [
+    "char_count",
+    "non_whitespace_char_count",
+    "word_count",
+    "token_count",
+    "sentence_count",
+    "avg_words_per_sentence",
+    "avg_token_length",
+    "syllable_count",
+    "avg_syllables_per_word",
+    "flesch_kincaid_grade",
+    "gunning_fog_index",
+    "lexical_density",
+    "lexical_diversity",
+    "sentiment_polarity",
+    "entity_count"
+  ],
+  "plot_files": [
+    {
+      "feature": "char_count",
+      "title": "char_count vs. Rank",
+      "file_name": "plot_char_count.png",
+      "path": "rankings\\content_feature_rank_plots\\collection_b3d7aa3ed0a463c7\\plot_char_count.png"
+    },
+    {
+      "feature": "non_whitespace_char_count",
+      "title": "non_whitespace_char_count vs. Rank",
+      "file_name": "plot_non_whitespace_char_count.png",
+      "path": "rankings\\content_feature_rank_plots\\collection_b3d7aa3ed0a463c7\\plot_non_whitespace_char_count.png"
+    },
+    {
+      "feature": "word_count",
+      "title": "word_count vs. Rank",
+      "file_name": "plot_word_count.png",
+      "path": "rankings\\content_feature_rank_plots\\collection_b3d7aa3ed0a463c7\\plot_word_count.png"
+    },
+    {
+      "feature": "token_count",
+      "title": "token_count vs. Rank",
+      "file_name": "plot_token_count.png",
+      "path": "rankings\\content_feature_rank_plots\\collection_b3d7aa3ed0a463c7\\plot_token_count.png"
+    },
+    {
+      "feature": "sentence_count",
+      "title": "sentence_count vs. Rank",
+      "file_name": "plot_sentence_count.png",
+      "path": "rankings\\content_feature_rank_plots\\collection_b3d7aa3ed0a463c7\\plot_sentence_count.png"
+    },
+    {
+      "feature": "avg_words_per_sentence",
+      "title": "avg_words_per_sentence vs. Rank",
+      "file_name": "plot_avg_words_per_sentence.png",
+      "path": "rankings\\content_feature_rank_plots\\collection_b3d7aa3ed0a463c7\\plot_avg_words_per_sentence.png"
+    },
+    {
+      "feature": "avg_token_length",
+      "title": "avg_token_length vs. Rank",
+      "file_name": "plot_avg_token_length.png",
+      "path": "rankings\\content_feature_rank_plots\\collection_b3d7aa3ed0a463c7\\plot_avg_token_length.png"
+    },
+    {
+      "feature": "syllable_count",
+      "title": "syllable_count vs. Rank",
+      "file_name": "plot_syllable_count.png",
+      "path": "rankings\\content_feature_rank_plots\\collection_b3d7aa3ed0a463c7\\plot_syllable_count.png"
+    },
+    {
+      "feature": "avg_syllables_per_word",
+      "title": "avg_syllables_per_word vs. Rank",
+      "file_name": "plot_avg_syllables_per_word.png",
+      "path": "rankings\\content_feature_rank_plots\\collection_b3d7aa3ed0a463c7\\plot_avg_syllables_per_word.png"
+    },
+    {
+      "feature": "flesch_kincaid_grade",
+      "title": "flesch_kincaid_grade vs. Rank",
+      "file_name": "plot_flesch_kincaid_grade.png",
+      "path": "rankings\\content_feature_rank_plots\\collection_b3d7aa3ed0a463c7\\plot_flesch_kincaid_grade.png"
+    },
+    {
+      "feature": "gunning_fog_index",
+      "title": "gunning_fog_index vs. Rank",
+      "file_name": "plot_gunning_fog_index.png",
+      "path": "rankings\\content_feature_rank_plots\\collection_b3d7aa3ed0a463c7\\plot_gunning_fog_index.png"
+    },
+    {
+      "feature": "lexical_density",
+      "title": "lexical_density vs. Rank",
+      "file_name": "plot_lexical_density.png",
+      "path": "rankings\\content_feature_rank_plots\\collection_b3d7aa3ed0a463c7\\plot_lexical_density.png"
+    },
+    {
+      "feature": "lexical_diversity",
+      "title": "lexical_diversity vs. Rank",
+      "file_name": "plot_lexical_diversity.png",
+      "path": "rankings\\content_feature_rank_plots\\collection_b3d7aa3ed0a463c7\\plot_lexical_diversity.png"
+    },
+    {
+      "feature": "sentiment_polarity",
+      "title": "sentiment_polarity vs. Rank",
+      "file_name": "plot_sentiment_polarity.png",
+      "path": "rankings\\content_feature_rank_plots\\collection_b3d7aa3ed0a463c7\\plot_sentiment_polarity.png"
+    },
+    {
+      "feature": "entity_count",
+      "title": "entity_count vs. Rank",
+      "file_name": "plot_entity_count.png",
+      "path": "rankings\\content_feature_rank_plots\\collection_b3d7aa3ed0a463c7\\plot_entity_count.png"
+    }
+  ],
+  "median_drop_summary": [
+    {
+      "feature": "non_whitespace_char_count",
+      "top_window_median": 13418.0,
+      "comparison_median": 12041.0,
+      "median_drop": 1377.0
+    },
+    {
+      "feature": "char_count",
+      "top_window_median": 16153.0,
+      "comparison_median": 14849.0,
+      "median_drop": 1304.0
+    },
+    {
+      "feature": "syllable_count",
+      "top_window_median": 4215.0,
+      "comparison_median": 3773.0,
+      "median_drop": 442.0
+    },
+    {
+      "feature": "token_count",
+      "top_window_median": 1710.0,
+      "comparison_median": 1508.0,
+      "median_drop": 202.0
+    },
+    {
+      "feature": "word_count",
+      "top_window_median": 2550.0,
+      "comparison_median": 2431.0,
+      "median_drop": 119.0
+    },
+    {
+      "feature": "entity_count",
+      "top_window_median": 277.0,
+      "comparison_median": 209.0,
+      "median_drop": 68.0
+    },
+    {
+      "feature": "sentence_count",
+      "top_window_median": 113.0,
+      "comparison_median": 110.0,
+      "median_drop": 3.0
+    },
+    {
+      "feature": "gunning_fog_index",
+      "top_window_median": 13.751309829844537,
+      "comparison_median": 12.84231700895208,
+      "median_drop": 0.9089928208924576
+    },
+    {
+      "feature": "flesch_kincaid_grade",
+      "top_window_median": 11.734718775847814,
+      "comparison_median": 11.63603119354757,
+      "median_drop": 0.09868758230024355
+    },
+    {
+      "feature": "avg_token_length",
+      "top_window_median": 5.957894736842105,
+      "comparison_median": 5.9453125,
+      "median_drop": 0.012582236842105132
+    },
+    {
+      "feature": "sentiment_polarity",
+      "top_window_median": 0.9979,
+      "comparison_median": 0.9963,
+      "median_drop": 0.0016000000000000458
+    },
+    {
+      "feature": "lexical_density",
+      "top_window_median": 0.5908579148840352,
+      "comparison_median": 0.6012145748987854,
+      "median_drop": -0.010356660014750219
+    },
+    {
+      "feature": "lexical_diversity",
+      "top_window_median": 0.3129793510324484,
+      "comparison_median": 0.32705350414468726,
+      "median_drop": -0.014074153112238863
+    },
+    {
+      "feature": "avg_syllables_per_word",
+      "top_window_median": 1.5727444002512037,
+      "comparison_median": 1.591589700531766,
+      "median_drop": -0.018845300280562416
+    },
+    {
+      "feature": "avg_words_per_sentence",
+      "top_window_median": 21.34246575342466,
+      "comparison_median": 21.46120218579235,
+      "median_drop": -0.11873643236769027
+    }
+  ]
+}

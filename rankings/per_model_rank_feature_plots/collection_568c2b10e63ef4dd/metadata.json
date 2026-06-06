@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "collection_key": "collection_568c2b10e63ef4dd",
+  "cache_status": "generated",
+  "generated_at_utc": "2026-06-05T13:14:25+00:00",
+  "output_dir": "rankings\\per_model_rank_feature_plots\\collection_568c2b10e63ef4dd",
+  "plot_kind": "heatmap",
+  "plot_kind_label": "Feature consistency heatmap",
+  "selected_model": "bm25",
+  "selected_model_label": "BM25 only",
+  "query_ids": [
+    "q000002"
+  ],
+  "queries": [
+    {
+      "query_id": "q000002",
+      "query_text": "Best dogs for small apartments",
+      "query_slug": "best-dogs-for-small-apartments",
+      "query_key": "best dogs for small apartments",
+      "executed_at_utc": "2026-06-04T16:17:34Z",
+      "result_file": "rankings\\initial_rankings\\q000002_best-dogs-for-small-apartments.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    }
+  ],
+  "rank_window": {
+    "max_rank": 100,
+    "rolling_window": 50,
+    "center": true,
+    "min_periods": 10
+  },
+  "median_drop_window": {
+    "top_start": 1,
+    "top_end": 25,
+    "comparison_start": 76,
+    "comparison_end": 100
+  },
+  "row_count": 100,
+  "feature_count": 15,
+  "features": [
+    "char_count",
+    "non_whitespace_char_count",
+    "word_count",
+    "token_count",
+    "sentence_count",
+    "avg_words_per_sentence",
+    "avg_token_length",
+    "syllable_count",
+    "avg_syllables_per_word",
+    "flesch_kincaid_grade",
+    "gunning_fog_index",
+    "lexical_density",
+    "lexical_diversity",
+    "sentiment_polarity",
+    "entity_count"
+  ],
+  "plot_files": [
+    {
+      "feature": "all_features",
+      "title": "Feature consistency heatmap",
+      "file_name": "heatmap.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_568c2b10e63ef4dd\\heatmap.png"
+    }
+  ],
+  "median_drop_summary": [
+    {
+      "feature": "sentiment_polarity",
+      "top_window_median": 0.9975,
+      "comparison_median": 0.994,
+      "median_drop": 0.0035000000000000586
+    },
+    {
+      "feature": "lexical_diversity",
+      "top_window_median": 0.4132420091324201,
+      "comparison_median": 0.412568306010929,
+      "median_drop": 0.0006737031214911204
+    },
+    {
+      "feature": "lexical_density",
+      "top_window_median": 0.5770862800565771,
+      "comparison_median": 0.59,
+      "median_drop": -0.01291371994342283
+    },
+    {
+      "feature": "avg_syllables_per_word",
+      "top_window_median": 1.5259391771019677,
+      "comparison_median": 1.589628681177977,
+      "median_drop": -0.06368950407600926
+    },
+    {
+      "feature": "avg_token_length",
+      "top_window_median": 5.90650406504065,
+      "comparison_median": 5.990215264187867,
+      "median_drop": -0.08371119914721703
+    },
+    {
+      "feature": "gunning_fog_index",
+      "top_window_median": 12.12068511198946,
+      "comparison_median": 12.730736175563152,
+      "median_drop": -0.6100510635736924
+    },
+    {
+      "feature": "flesch_kincaid_grade",
+      "top_window_median": 10.301454264854279,
+      "comparison_median": 11.374434923000496,
+      "median_drop": -1.0729806581462178
+    },
+    {
+      "feature": "avg_words_per_sentence",
+      "top_window_median": 19.72222222222222,
+      "comparison_median": 20.925531914893618,
+      "median_drop": -1.2033096926713966
+    },
+    {
+      "feature": "sentence_count",
+      "top_window_median": 46.0,
+      "comparison_median": 48.0,
+      "median_drop": -2.0
+    },
+    {
+      "feature": "entity_count",
+      "top_window_median": 88.0,
+      "comparison_median": 124.0,
+      "median_drop": -36.0
+    },
+    {
+      "feature": "token_count",
+      "top_window_median": 492.0,
+      "comparison_median": 694.0,
+      "median_drop": -202.0
+    },
+    {
+      "feature": "word_count",
+      "top_window_median": 844.0,
+      "comparison_median": 1098.0,
+      "median_drop": -254.0
+    },
+    {
+      "feature": "syllable_count",
+      "top_window_median": 1293.0,
+      "comparison_median": 1680.0,
+      "median_drop": -387.0
+    },
+    {
+      "feature": "non_whitespace_char_count",
+      "top_window_median": 4083.0,
+      "comparison_median": 5405.0,
+      "median_drop": -1322.0
+    },
+    {
+      "feature": "char_count",
+      "top_window_median": 4973.0,
+      "comparison_median": 6642.0,
+      "median_drop": -1669.0
+    }
+  ]
+}

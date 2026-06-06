@@ -1,18 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %}Content Change Experiments{% endblock %}
-
-{% block topbar_note %}Temporary content and link reranking sandbox{% endblock %}
+{% block title %}{{ workspace_config.label }} Content Change Experiments{% endblock %}
 
 {% block content %}
   <main class="page-stack">
     <section class="feature-section-header">
       <div>
-        <p class="section-label">Experiments</p>
-        <h2>Content Change Experiments</h2>
+        <p class="section-label">{{ workspace_config.label }} &gt; Content Change Experiments</p>
+        <h2>{{ workspace_config.experiments_heading }}</h2>
       </div>
       <p class="helper-text search-panel-note">
-        Edit one article against a saved query, simulate link changes, and compare the temporary rerank against the stored baseline.
+        {{ workspace_config.experiments_note }}
       </p>
     </section>
 
@@ -24,12 +22,15 @@
         </div>
         <p class="helper-text search-panel-note">
           Experiments reuse full rankings from <code>rankings/initial_rankings</code>. No edited content or links are written back to disk.
+          {% if model_info %}
+            The temporary view is then reordered by {{ model_info.label|lower }} inside this workspace.
+          {% endif %}
         </p>
       </div>
 
       <form
         class="experiment-picker-form"
-        action="{{ url_for('select_content_change_experiment_article') }}"
+        action="{{ select_form_action }}"
         method="post"
         data-experiment-picker-form
       >
@@ -114,19 +115,28 @@
       {% if baseline_entry %}
         <section class="summary-grid baseline-entry-grid">
           <article class="summary-card baseline-rank-card">
-            <p class="section-label">Baseline Ranking Entry</p>
-            <h2>Rank {{ '{:,}'.format(baseline_entry.rank|int) }}</h2>
+            <p class="section-label">Baseline {{ baseline_entry.selected_rank_label }}</p>
+            <h2>{{ '{:,}'.format(baseline_entry.rank|int) }}</h2>
             <p class="summary-meta">
               Out of {{ '{:,}'.format(baseline_entry.total_results|int) }} stored results for {{ baseline_entry.query_id }}.
             </p>
           </article>
           <article class="summary-card">
-            <p class="section-label">Selected Query</p>
-            <h2>{{ baseline_entry.query_text }}</h2>
+            <p class="section-label">Baseline {{ baseline_entry.selected_score_label }}</p>
+            <h2>{{ '%.6f'|format(baseline_entry.score) }}</h2>
             <p class="summary-meta">
               Matched tokens: {{ baseline_entry.matched_query_tokens or 'None' }}
             </p>
           </article>
+          {% if baseline_entry.comparison_rank_label %}
+            <article class="summary-card">
+              <p class="section-label">Baseline {{ baseline_entry.comparison_rank_label }}</p>
+              <h2>{{ '{:,}'.format(baseline_entry.comparison_rank|int) }}</h2>
+              <p class="summary-meta">
+                {{ baseline_entry.comparison_score_label }} {{ '%.6f'|format(baseline_entry.comparison_score) }}
+              </p>
+            </article>
+          {% endif %}
           <article class="summary-card">
             <p class="section-label">Saved Ranking File</p>
             <h2>{{ baseline_entry.query_id }}</h2>
@@ -138,16 +148,16 @@
           <div class="results-header">
             <div>
               <p class="section-label">Original Score Breakdown</p>
-              <h2>How This Article Ranked Before Editing</h2>
+              <h2>How This Article Ranked Before Editing In {{ workspace_config.label }}</h2>
               <p class="helper-text">
-                Same ranking components shown on the Query page, pulled from the saved parquet row for this article.
+                The saved parquet row is reordered into the active workspace when needed, while the full score breakdown stays visible for comparison.
               </p>
             </div>
           </div>
 
           <div class="baseline-score-strip">
             {% for component in baseline_entry.components %}
-              <div class="baseline-score-pill">
+              <div class="baseline-score-pill{% if component.is_primary %} is-primary{% endif %}">
                 <span>{{ component.label }}</span>
                 <strong>{{ '%.6f'|format(component.value) }}</strong>
               </div>
@@ -168,7 +178,7 @@
             <table class="results-table compact-table">
               <thead>
                 <tr>
-                  <th>Rank</th>
+                  <th>{{ baseline_entry.selected_rank_label }}</th>
                   <th>Title</th>
                   <th>Document</th>
                   <th>Size</th>
@@ -215,7 +225,7 @@
 
       <form
         class="experiment-editor-form"
-        action="{{ url_for('run_content_change_experiment') }}"
+        action="{{ run_form_action }}"
         method="post"
         data-experiment-run-form
       >
@@ -335,12 +345,12 @@
 
       <section class="summary-grid">
         <article class="summary-card">
-          <p class="section-label">Baseline Rank</p>
+          <p class="section-label">{{ result.selected_rank_label }} before edits</p>
           <h2>{{ '{:,}'.format(result.baseline_rank|int) }}</h2>
-          <p class="summary-meta">Stored rank before temporary edits.</p>
+          <p class="summary-meta">Stored workspace rank before temporary edits.</p>
         </article>
         <article class="summary-card">
-          <p class="section-label">Experimental Rank</p>
+          <p class="section-label">{{ result.selected_rank_label }} after edits</p>
           <h2>{{ '{:,}'.format(result.experiment_rank|int) }}</h2>
           <p class="summary-meta">
             {% if result.rank_delta > 0 %}
@@ -353,12 +363,22 @@
           </p>
         </article>
         <article class="summary-card">
-          <p class="section-label">Hybrid Score Change</p>
-          <h2>{{ '%+.6f'|format(result.experiment_hybrid_score - result.baseline_hybrid_score) }}</h2>
+          <p class="section-label">{{ result.selected_score_label }} change</p>
+          <h2>{{ '%+.6f'|format(result.experiment_selected_score - result.baseline_selected_score) }}</h2>
           <p class="summary-meta">
-            {{ '%.6f'|format(result.baseline_hybrid_score) }} -> {{ '%.6f'|format(result.experiment_hybrid_score) }}
+            {{ '%.6f'|format(result.baseline_selected_score) }} -> {{ '%.6f'|format(result.experiment_selected_score) }}
           </p>
         </article>
+        {% if result.comparison_rank_label %}
+          <article class="summary-card">
+            <p class="section-label">{{ result.comparison_rank_label }} reference</p>
+            <h2>{{ '{:,}'.format(result.experiment_comparison_rank|int) }}</h2>
+            <p class="summary-meta">
+              {{ '{:,}'.format(result.baseline_comparison_rank|int) }} -> {{ '{:,}'.format(result.experiment_comparison_rank|int) }}
+              | {{ '%.6f'|format(result.baseline_comparison_score) }} -> {{ '%.6f'|format(result.experiment_comparison_score) }}
+            </p>
+          </article>
+        {% endif %}
       </section>
 
       {% if result.link_warnings %}
@@ -453,13 +473,13 @@
             <thead>
               <tr>
                 <th>
-                  <button type="button" class="sort-button is-active" data-sort-key="experiment_rank" data-sort-type="number" data-sort-direction="asc">
-                    Experiment Rank <span class="sort-indicator" aria-hidden="true">^</span>
+                  <button type="button" class="sort-button is-active" data-sort-key="experiment_selected_rank" data-sort-type="number" data-sort-direction="asc">
+                    {{ result.selected_rank_label }} <span class="sort-indicator" aria-hidden="true">^</span>
                   </button>
                 </th>
                 <th>
-                  <button type="button" class="sort-button" data-sort-key="baseline_rank" data-sort-type="number" data-sort-direction="none">
-                    Baseline Rank <span class="sort-indicator" aria-hidden="true">&lt;&gt;</span>
+                  <button type="button" class="sort-button" data-sort-key="baseline_selected_rank" data-sort-type="number" data-sort-direction="none">
+                    Baseline {{ result.selected_rank_label }} <span class="sort-indicator" aria-hidden="true">&lt;&gt;</span>
                   </button>
                 </th>
                 <th>
@@ -473,17 +493,29 @@
                   </button>
                 </th>
                 <th>
-                  <button type="button" class="sort-button" data-sort-key="hybrid_score" data-sort-type="number" data-sort-direction="none">
-                    Hybrid <span class="sort-indicator" aria-hidden="true">&lt;&gt;</span>
+                  <button type="button" class="sort-button" data-sort-key="experiment_selected_score" data-sort-type="number" data-sort-direction="none">
+                    {{ result.selected_score_label }} <span class="sort-indicator" aria-hidden="true">&lt;&gt;</span>
                   </button>
                 </th>
                 <th>
-                  <button type="button" class="sort-button" data-sort-key="baseline_hybrid_score" data-sort-type="number" data-sort-direction="none">
-                    Baseline Hybrid <span class="sort-indicator" aria-hidden="true">&lt;&gt;</span>
+                  <button type="button" class="sort-button" data-sort-key="baseline_selected_score" data-sort-type="number" data-sort-direction="none">
+                    Baseline {{ result.selected_score_label }} <span class="sort-indicator" aria-hidden="true">&lt;&gt;</span>
                   </button>
                 </th>
+                {% if result.comparison_rank_label %}
+                  <th>
+                    <button type="button" class="sort-button" data-sort-key="hybrid_rank" data-sort-type="number" data-sort-direction="none">
+                      {{ result.comparison_rank_label }} <span class="sort-indicator" aria-hidden="true">&lt;&gt;</span>
+                    </button>
+                  </th>
+                  <th>
+                    <button type="button" class="sort-button" data-sort-key="hybrid_score" data-sort-type="number" data-sort-direction="none">
+                      {{ result.comparison_score_label }} <span class="sort-indicator" aria-hidden="true">&lt;&gt;</span>
+                    </button>
+                  </th>
+                {% endif %}
                 <th>BM25</th>
-                <th>Semantic</th>
+                <th>SBERT</th>
                 <th>PageRank</th>
                 <th>Page ID</th>
               </tr>
@@ -491,8 +523,8 @@
             <tbody>
               {% for row in result.preview_rows %}
                 <tr class="{% if row.is_selected_article %}is-selected-article{% endif %}">
-                  <td data-sort-value="{{ row.experiment_rank }}">{{ row.experiment_rank }}</td>
-                  <td data-sort-value="{{ row.baseline_rank }}">{{ row.baseline_rank }}</td>
+                  <td data-sort-value="{{ row.experiment_selected_rank }}">{{ row.experiment_selected_rank }}</td>
+                  <td data-sort-value="{{ row.baseline_selected_rank }}">{{ row.baseline_selected_rank }}</td>
                   <td data-sort-value="{{ row.rank_delta }}">{{ '%+d'|format(row.rank_delta|int) }}</td>
                   <td data-sort-value="{{ row.title }}">
                     <div class="title-cell">
@@ -506,8 +538,12 @@
                       <span>{{ row.file_name }}</span>
                     </div>
                   </td>
-                  <td data-sort-value="{{ row.hybrid_score }}">{{ '%.6f'|format(row.hybrid_score) }}</td>
-                  <td data-sort-value="{{ row.baseline_hybrid_score }}">{{ '%.6f'|format(row.baseline_hybrid_score) }}</td>
+                  <td data-sort-value="{{ row.experiment_selected_score }}">{{ '%.6f'|format(row.experiment_selected_score) }}</td>
+                  <td data-sort-value="{{ row.baseline_selected_score }}">{{ '%.6f'|format(row.baseline_selected_score) }}</td>
+                  {% if result.comparison_rank_label %}
+                    <td data-sort-value="{{ row.hybrid_rank }}">{{ row.hybrid_rank }}</td>
+                    <td data-sort-value="{{ row.hybrid_score }}">{{ '%.6f'|format(row.hybrid_score) }}</td>
+                  {% endif %}
                   <td>{{ '%.4f'|format(row.bm25_score_norm) }}</td>
                   <td>{{ '%.4f'|format(row.semantic_score_norm) }}</td>
                   <td>{{ '%.4f'|format(row.pagerank_norm) }}</td>

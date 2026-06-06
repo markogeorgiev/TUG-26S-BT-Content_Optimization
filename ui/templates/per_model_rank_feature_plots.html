@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}Per Model Rank Feature Plots{% endblock %}
+
+{% block topbar_note %}Feature plots across saved single-model ranking positions{% endblock %}
+
+{% block content %}
+  <main class="page-stack">
+    <section class="feature-section-header">
+      <div>
+        <p class="section-label">Per Model Rank Relationship</p>
+        <h2>Single-Model Rank Association Analysis</h2>
+      </div>
+      <nav class="secondary-nav" aria-label="Per model rank relationship navigation">
+        <a class="secondary-nav-link" href="{{ url_for('per_model_rank_relationship', model=selected_model) }}">
+          Single-Model Rank Association Analysis
+        </a>
+        <a class="secondary-nav-link is-active" href="{{ url_for('per_model_rank_feature_plots', model=selected_model) }}">
+          Rank Feature Plots
+        </a>
+      </nav>
+    </section>
+
+    <section class="panel search-panel">
+      <div class="search-panel-header">
+        <div>
+          <p class="section-label">Per Model Rank Relationship &gt; Rank Feature Plots</p>
+          <h2>Select Queries, Pick A Model, And Analyze Rank Feature Plots</h2>
+        </div>
+        <p class="helper-text search-panel-note">
+          The same selected query IDs, model, plot kind, and rank-window settings reuse the same cached folder under <code>rankings/per_model_rank_feature_plots/</code>.
+        </p>
+      </div>
+
+      <form class="rank-plot-form" action="{{ url_for('per_model_rank_feature_plots') }}" method="get" data-rank-plot-form>
+        <div class="plot-kind-control">
+          <label class="field-label" for="per-model-rank-plot-model">Model</label>
+          <select id="per-model-rank-plot-model" name="model" class="rank-plot-select">
+            {% for option in model_options %}
+              <option value="{{ option.value }}" {% if option.value == selected_model %}selected{% endif %}>
+                {{ option.label }}
+              </option>
+            {% endfor %}
+          </select>
+          {% for option in model_options %}
+            {% if option.value == selected_model %}
+              <p class="helper-text">{{ option.description }}</p>
+            {% endif %}
+          {% endfor %}
+        </div>
+
+        <div class="plot-kind-control">
+          <label class="field-label" for="plot-kind">Plot kind</label>
+          <select id="plot-kind" name="plot_kind" class="rank-plot-select">
+            {% for option in plot_kind_options %}
+              <option value="{{ option.value }}" {% if option.value == selected_plot_kind %}selected{% endif %}>
+                {{ option.label }}
+              </option>
+            {% endfor %}
+          </select>
+          {% for option in plot_kind_options %}
+            {% if option.value == selected_plot_kind %}
+              <p class="helper-text">{{ option.description }}</p>
+            {% endif %}
+          {% endfor %}
+        </div>
+
+        <div class="query-selection-toolbar">
+          <button type="button" class="secondary-button" data-select-all-rank-queries>Select all</button>
+          <button type="button" class="secondary-button" data-clear-rank-queries>Clear</button>
+          <button type="submit" class="submit-button" data-rank-plot-submit>
+            Generate or reuse plots
+          </button>
+        </div>
+
+        {% if query_options %}
+          <div class="query-option-grid">
+            {% for query in query_options %}
+              <label class="query-option-card{% if not query.has_result_file %} is-disabled{% endif %}">
+                <input
+                  type="checkbox"
+                  name="query_id"
+                  value="{{ query.query_id }}"
+                  {% if query.query_id in selected_query_ids %}checked{% endif %}
+                  {% if not query.has_result_file %}disabled{% endif %}
+                  data-rank-query-checkbox
+                >
+                <span>
+                  <strong>{{ query.query_id }}</strong>
+                  {{ query.query_text }}
+                </span>
+                <small>
+                  {{ '{:,}'.format(query.stored_result_count) }} stored rows
+                  {% if not query.has_result_file %}| missing parquet{% endif %}
+                </small>
+              </label>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="helper-text">No saved queries were found in <code>rankings/queries.json</code>.</p>
+        {% endif %}
+      </form>
+    </section>
+
+    {% if error_message %}
+      <div class="status-banner error">{{ error_message }}</div>
+    {% endif %}
+
+    {% if analysis %}
+      <section class="summary-grid">
+        <article class="summary-card">
+          <p class="section-label">Plot Cache</p>
+          <h2>{{ 'Existing plots reused' if analysis.cache_status == 'reused' else 'Fresh plots generated' }}</h2>
+          <p class="summary-meta">{{ analysis.collection_key }} | {{ analysis.plot_kind_label }}</p>
+        </article>
+        <article class="summary-card">
+          <p class="section-label">Selected Model</p>
+          <h2>{{ analysis.selected_model_label }}</h2>
+          <p class="summary-meta">Top-100 positions are rebuilt from this model only.</p>
+        </article>
+        <article class="summary-card">
+          <p class="section-label">Selected Collection</p>
+          <h2>{{ analysis.queries|length }} queries</h2>
+          <p class="summary-meta">{{ '{:,}'.format(analysis.row_count) }} ranked article rows analyzed</p>
+        </article>
+      </section>
+
+      <section class="results-card">
+        <div class="results-header">
+          <div>
+            <p class="section-label">Selected Queries</p>
+            <h2>Collection Members</h2>
+          </div>
+        </div>
+        <div class="selected-query-list">
+          {% for query in analysis.queries %}
+            <span class="selected-query-pill">
+              <strong>{{ query.query_id }}</strong>
+              {{ query.query_text }}
+            </span>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="results-card">
+        <div class="results-header">
+          <div>
+            <p class="section-label">Predictive Proxy</p>
+            <h2>Largest Median Drops</h2>
+            <p class="helper-text">
+              Difference is median(feature at ranks
+              {{ analysis.median_drop_window.top_start }}-{{ analysis.median_drop_window.top_end }})
+              minus median(feature at ranks
+              {{ analysis.median_drop_window.comparison_start }}-{{ analysis.median_drop_window.comparison_end }}) for {{ analysis.selected_model_label }} rank.
+            </p>
+          </div>
+        </div>
+
+        {% if analysis.median_drop_summary %}
+          <div class="table-wrap">
+            <table class="results-table compact-table">
+              <thead>
+                <tr>
+                  <th>Feature</th>
+                  <th>Ranks {{ analysis.median_drop_window.top_start }}-{{ analysis.median_drop_window.top_end }} Median</th>
+                  <th>Ranks {{ analysis.median_drop_window.comparison_start }}-{{ analysis.median_drop_window.comparison_end }} Median</th>
+                  <th>Median Drop</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in analysis.median_drop_summary %}
+                  {% if loop.index <= 10 %}
+                    <tr>
+                      <td>{{ item.feature }}</td>
+                      <td>{{ '%.6f'|format(item.top_window_median) }}</td>
+                      <td>{{ '%.6f'|format(item.comparison_median) }}</td>
+                      <td>{{ '%.6f'|format(item.median_drop) }}</td>
+                    </tr>
+                  {% endif %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="helper-text">No median-drop summary could be computed for this collection.</p>
+        {% endif %}
+      </section>
+
+      <section class="results-card">
+        <div class="results-header">
+          <div>
+            <p class="section-label">Rank Plots</p>
+            <h2>{{ analysis.plot_kind_label }}</h2>
+            <p class="helper-text">
+              {% if analysis.plot_kind == 'heatmap' %}
+                The heatmap uses four rank buckets: 1-25, 26-50, 51-75, and 76-100.
+                Light cells are more consistent; dark cells have wider normalized IQR spread.
+              {% elif analysis.plot_kind == 'violin' %}
+                Each per-feature violin plot shows the feature value distribution across rank buckets 1-25, 26-50, 51-75, and 76-100.
+              {% elif analysis.plot_kind == 'overlay' %}
+                Each per-feature plot draws faint per-query rolling medians plus a bold aggregate rolling median over ranks 1-100.
+              {% else %}
+                Each per-feature ribbon uses a centered rolling window of 50 rows, min periods 10, over ranks 1-100.
+              {% endif %}
+            </p>
+          </div>
+        </div>
+
+        <div class="plot-gallery{% if analysis.plot_kind == 'heatmap' %} heatmap-gallery{% endif %}">
+          {% for plot in analysis.plot_files %}
+            <article class="plot-card">
+              <h3>{{ plot.title }}</h3>
+              <a href="{{ plot.url }}" target="_blank" rel="noopener noreferrer">
+                <img src="{{ plot.url }}" alt="{{ plot.title }}">
+              </a>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% else %}
+      <section class="results-card">
+        <div class="empty-state feature-empty-state">
+          <p class="section-label">Per Model Rank Feature Plots</p>
+          <h2>Select one or more saved queries, a model, and a plot kind.</h2>
+          <p>
+            The plots join saved rankings from <code>rankings/initial_rankings/</code>
+            with article features from <code>data/content_features/</code>, then rebuild rank positions from the selected model only.
+          </p>
+        </div>
+      </section>
+    {% endif %}
+  </main>
+{% endblock %}

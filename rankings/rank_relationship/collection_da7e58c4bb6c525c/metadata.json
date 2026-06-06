@@ -1,0 +1,249 @@
+{
+  "schema_version": 2,
+  "collection_key": "collection_da7e58c4bb6c525c",
+  "cache_status": "generated",
+  "generated_at_utc": "2026-06-05T20:41:15+00:00",
+  "query_count": 15,
+  "article_count": 21058,
+  "feature_count": 15,
+  "model_feature_count": 6,
+  "model_names": [
+    "bm25",
+    "hybrid",
+    "pagerank",
+    "semantic"
+  ],
+  "queries": [
+    {
+      "query_id": "q000001",
+      "query_text": "Are birds good pets?",
+      "result_file": "rankings\\initial_rankings\\q000001_are-birds-good-pets.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    },
+    {
+      "query_id": "q000002",
+      "query_text": "Best dogs for small apartments",
+      "result_file": "rankings\\initial_rankings\\q000002_best-dogs-for-small-apartments.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    },
+    {
+      "query_id": "q000003",
+      "query_text": "The most popular orange cat",
+      "result_file": "rankings\\initial_rankings\\q000003_the-most-popular-orange-cat.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    },
+    {
+      "query_id": "q000004",
+      "query_text": "Low maintenance pets for beginners",
+      "result_file": "rankings\\initial_rankings\\q000004_low-maintenance-pets-for-beginners.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    },
+    {
+      "query_id": "q000005",
+      "query_text": "What should you feed a chameleon",
+      "result_file": "rankings\\initial_rankings\\q000005_what-should-you-feed-a-chameleon.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    },
+    {
+      "query_id": "q000006",
+      "query_text": "Can you keep a fish as a pet?",
+      "result_file": "rankings\\initial_rankings\\q000006_can-you-keep-a-fish-as-a-pet.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    },
+    {
+      "query_id": "q000007",
+      "query_text": "The most common lizard that people keep as a pet",
+      "result_file": "rankings\\initial_rankings\\q000007_the-most-common-lizard-that-people-keep-as-a-pet.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    },
+    {
+      "query_id": "q000008",
+      "query_text": "Easy to manage parrots",
+      "result_file": "rankings\\initial_rankings\\q000008_easy-to-manage-parrots.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    },
+    {
+      "query_id": "q000009",
+      "query_text": "most beautiful dog ever",
+      "result_file": "rankings\\initial_rankings\\q000009_most-beautiful-dog-ever.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    },
+    {
+      "query_id": "q000010",
+      "query_text": "Do all dogs need to go on a walk everyday?",
+      "result_file": "rankings\\initial_rankings\\q000010_do-all-dogs-need-to-go-on-a-walk-everyday.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    },
+    {
+      "query_id": "q000011",
+      "query_text": "dog with brown fur",
+      "result_file": "rankings\\initial_rankings\\q000011_dog-with-brown-fur.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    },
+    {
+      "query_id": "q000012",
+      "query_text": "Dog breed that doesn't shed",
+      "result_file": "rankings\\initial_rankings\\q000012_dog-breed-that-doesn-t-shed.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    },
+    {
+      "query_id": "q000013",
+      "query_text": "Healthy diet for dogs",
+      "result_file": "rankings\\initial_rankings\\q000013_healthy-diet-for-dogs.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    },
+    {
+      "query_id": "q000014",
+      "query_text": "How often should I take dog to the vet",
+      "result_file": "rankings\\initial_rankings\\q000014_how-often-should-i-take-dog-to-the-vet.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    },
+    {
+      "query_id": "q000015",
+      "query_text": "best exotic pet",
+      "result_file": "rankings\\initial_rankings\\q000015_best-exotic-pet.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    }
+  ],
+  "outputs": {
+    "summary": "rankings\\rank_relationship\\collection_da7e58c4bb6c525c\\results\\association_summary.csv",
+    "dot_plot": "rankings\\rank_relationship\\collection_da7e58c4bb6c525c\\results\\dot_plot.png",
+    "diverging_bar": "rankings\\rank_relationship\\collection_da7e58c4bb6c525c\\results\\diverging_bar.png",
+    "model_correlations": "rankings\\rank_relationship\\collection_da7e58c4bb6c525c\\results\\model_correlations.csv",
+    "model_importance": "rankings\\rank_relationship\\collection_da7e58c4bb6c525c\\results\\model_importance.csv",
+    "model_correlation_heatmaps": "rankings\\rank_relationship\\collection_da7e58c4bb6c525c\\results\\model_correlation_heatmaps.png",
+    "model_importance_heatmaps": "rankings\\rank_relationship\\collection_da7e58c4bb6c525c\\results\\model_importance_heatmaps.png"
+  },
+  "top_features": [
+    {
+      "feature": "syllable_count",
+      "mutual_info_norm": 0.11372333659854723,
+      "spearman_r": -0.5594230988231305,
+      "spearman_p": 0.0,
+      "partial_r": 0.010118817376493614,
+      "mw_effect_top10": -0.8250428082020174,
+      "has_breakpoint": true,
+      "breakpoint_value": 2076.2356467569007
+    },
+    {
+      "feature": "sentence_count",
+      "mutual_info_norm": 0.11296124542306803,
+      "spearman_r": -0.5622649811174647,
+      "spearman_p": 0.0,
+      "partial_r": 0.03297034392236711,
+      "mw_effect_top10": -0.8264783837370724,
+      "has_breakpoint": true,
+      "breakpoint_value": 67.75149898257288
+    },
+    {
+      "feature": "word_count",
+      "mutual_info_norm": 0.11256309239648578,
+      "spearman_r": -0.5612445530709614,
+      "spearman_p": 0.0,
+      "partial_r": -0.05562859863010515,
+      "mw_effect_top10": -0.8265692816399866,
+      "has_breakpoint": true,
+      "breakpoint_value": 1249.749670905162
+    },
+    {
+      "feature": "token_count",
+      "mutual_info_norm": 0.10967828125076452,
+      "spearman_r": -0.5568765661088413,
+      "spearman_p": 0.0,
+      "partial_r": -0.06141254600046284,
+      "mw_effect_top10": -0.8232776901870753,
+      "has_breakpoint": true,
+      "breakpoint_value": 855.5329084100996
+    },
+    {
+      "feature": "char_count",
+      "mutual_info_norm": 0.10919079944842276,
+      "spearman_r": -0.559147290141823,
+      "spearman_p": 0.0,
+      "partial_r": -0.0023240735108776838,
+      "mw_effect_top10": -0.8248544982135104,
+      "has_breakpoint": true,
+      "breakpoint_value": 8236.659701177465
+    },
+    {
+      "feature": "non_whitespace_char_count",
+      "mutual_info_norm": 0.10912488426180456,
+      "spearman_r": -0.558962642072926,
+      "spearman_p": 0.0,
+      "partial_r": 0.01750424866932575,
+      "mw_effect_top10": -0.8247438573261705,
+      "has_breakpoint": true,
+      "breakpoint_value": 6864.248873030459
+    },
+    {
+      "feature": "lexical_diversity",
+      "mutual_info_norm": 0.09293272606269676,
+      "spearman_r": 0.525613771446706,
+      "spearman_p": 0.0,
+      "partial_r": 0.003366184753242115,
+      "mw_effect_top10": 0.7995516839262442,
+      "has_breakpoint": true,
+      "breakpoint_value": 0.5595854933385553
+    },
+    {
+      "feature": "entity_count",
+      "mutual_info_norm": 0.0892393872565345,
+      "spearman_r": -0.5014972495933309,
+      "spearman_p": 0.0,
+      "partial_r": 0.06148532716745999,
+      "mw_effect_top10": -0.7709920789542992,
+      "has_breakpoint": true,
+      "breakpoint_value": 197.13834540025917
+    },
+    {
+      "feature": "sentiment_polarity",
+      "mutual_info_norm": 0.0768329904137356,
+      "spearman_r": -0.14902623211463134,
+      "spearman_p": 7.536931656255772e-105,
+      "partial_r": 0.040470428179531934,
+      "mw_effect_top10": -0.06029537509064742,
+      "has_breakpoint": true,
+      "breakpoint_value": 0.3055520888958187
+    },
+    {
+      "feature": "avg_words_per_sentence",
+      "mutual_info_norm": 0.04401341181534589,
+      "spearman_r": -0.21695834422140511,
+      "spearman_p": 8.979004154684947e-223,
+      "partial_r": 0.0629404076273051,
+      "mw_effect_top10": -0.2432933733324194,
+      "has_breakpoint": true,
+      "breakpoint_value": 21.181194897015512
+    }
+  ]
+}

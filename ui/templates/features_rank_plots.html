@@ -1,22 +1,22 @@
 {% extends "base.html" %}
 
-{% block title %}Rank Content Feature Plots{% endblock %}
+{% block title %}Hybrid Rank Feature Plots{% endblock %}
 
-{% block topbar_note %}Feature plots across saved ranking positions{% endblock %}
+{% block topbar_note %}Feature plots across saved hybrid ranking positions{% endblock %}
 
 {% block content %}
   <main class="page-stack">
     <section class="feature-section-header">
       <div>
-        <p class="section-label">Content Features</p>
-        <h2>Content Feature Analysis</h2>
+        <p class="section-label">Rank Relationship</p>
+        <h2>Advanced Rank Association Analysis</h2>
       </div>
-      <nav class="secondary-nav" aria-label="Content features navigation">
-        <a class="secondary-nav-link is-active" href="{{ url_for('rank_feature_plots') }}">
-          Rank Feature Plots
+      <nav class="secondary-nav" aria-label="Rank relationship navigation">
+        <a class="secondary-nav-link" href="{{ url_for('rank_relationship') }}">
+          Advanced Rank Association Analysis
         </a>
-        <a class="secondary-nav-link" href="{{ url_for('article_features') }}">
-          Show Article Level Features
+        <a class="secondary-nav-link is-active" href="{{ url_for('rank_relationship_feature_plots') }}">
+          Rank Feature Plots
         </a>
       </nav>
     </section>
@@ -24,15 +24,15 @@
     <section class="panel search-panel">
       <div class="search-panel-header">
         <div>
-          <p class="section-label">Content Features &gt; Rank Feature Plots</p>
-          <h2>Select Queries And Analyze Feature Plots</h2>
+          <p class="section-label">Rank Relationship &gt; Rank Feature Plots</p>
+          <h2>Select Queries And Analyze Hybrid Rank Feature Plots</h2>
         </div>
         <p class="helper-text search-panel-note">
           The same selected query IDs, plot kind, and rank-window settings reuse the same cached folder under <code>rankings/content_feature_rank_plots/</code>.
         </p>
       </div>
 
-      <form class="rank-plot-form" action="{{ url_for('rank_feature_plots') }}" method="get" data-rank-plot-form>
+      <form class="rank-plot-form" action="{{ url_for('rank_relationship_feature_plots') }}" method="get" data-rank-plot-form>
         <div class="plot-kind-control">
           <label class="field-label" for="plot-kind">Plot kind</label>
           <select id="plot-kind" name="plot_kind" class="rank-plot-select">
@@ -207,7 +207,7 @@
           <p class="section-label">Rank Feature Plots</p>
           <h2>Select one or more saved queries and a plot kind.</h2>
           <p>
-            The plots join saved rankings from <code>rankings/initial_rankings/</code>
+            The plots join saved hybrid rankings from <code>rankings/initial_rankings/</code>
             with article features from <code>data/content_features/</code>.
           </p>
         </div>

@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}{{ workspace_config.label }} Query{% endblock %}
+
+{% block content %}
+  <main class="page-stack">
+    <section class="panel search-panel">
+      <div class="search-panel-header">
+        <div>
+          <p class="section-label">{{ workspace_config.label }} &gt; Query</p>
+          <h2>{{ workspace_config.query_heading }}</h2>
+        </div>
+        <p class="helper-text search-panel-note">
+          {{ workspace_config.query_note }}
+        </p>
+      </div>
+
+      <form class="search-form search-form-top" action="{{ query_form_action }}" method="post" data-search-form>
+        <div class="search-grid">
+          <div class="search-field search-field-query">
+            <label class="field-label" for="{{ workspace_key }}-query-input">Query</label>
+            <div class="query-box">
+              <input
+                id="{{ workspace_key }}-query-input"
+                name="query"
+                type="text"
+                value="{{ current_query }}"
+                placeholder="Search the pets corpus..."
+                autocomplete="off"
+                spellcheck="false"
+                data-query-input
+                data-suggestions-url="{{ url_for('query_suggestions') }}"
+              >
+              <div class="suggestions" hidden data-suggestions></div>
+            </div>
+          </div>
+
+          <div class="search-field search-field-limit">
+            <label class="field-label" for="{{ workspace_key }}-display-limit">Results to display</label>
+            <select id="{{ workspace_key }}-display-limit" name="display_limit" data-display-limit-select>
+              {% for option in display_options %}
+                <option value="{{ option }}" {% if option|string == selected_display_value %}selected{% endif %}>
+                  Top {{ option }}
+                </option>
+              {% endfor %}
+              <option value="custom" {% if selected_display_value == 'custom' %}selected{% endif %}>
+                Other
+              </option>
+            </select>
+          </div>
+
+          <div class="search-field search-field-action">
+            <button type="submit" class="submit-button" data-submit-button>
+              {{ workspace_config.query_button_label }}
+            </button>
+          </div>
+        </div>
+
+        <div class="custom-limit-box{% if selected_display_value != 'custom' %} is-hidden{% endif %}" data-custom-limit-box>
+          <label class="field-label" for="{{ workspace_key }}-display-limit-custom">Custom k</label>
+          <input
+            id="{{ workspace_key }}-display-limit-custom"
+            name="display_limit_custom"
+            type="number"
+            min="1"
+            step="1"
+            value="{{ custom_display_limit }}"
+            placeholder="Enter any positive k"
+          >
+        </div>
+      </form>
+
+      {% if recent_queries %}
+        <div class="recent-query-strip">
+          <div class="results-header">
+            <div>
+              <p class="section-label">Recent Saved Queries</p>
+              <p class="helper-text">
+                Every workspace shares the same saved query history. Choosing one here reopens the
+                stored parquet in the current {{ workspace_config.label|lower }} view.
+              </p>
+            </div>
+          </div>
+          <div class="selected-query-list">
+            {% for item in recent_queries %}
+              <a
+                class="selected-query-pill"
+                href="{{ url_for(query_results_endpoint, workspace=workspace_key, query_id=item.query_id, display=display_limit) }}"
+              >
+                <strong>{{ item.query_id }}</strong>
+                {{ item.query_text }}
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+    </section>
+
+    <section class="workspace">
+      {% if error_message %}
+        <div class="status-banner error">{{ error_message }}</div>
+      {% endif %}
+
+      {% if query_record %}
+        <section class="summary-grid">
+          <article class="summary-card">
+            <p class="section-label">Selected Query</p>
+            <h2>{{ query_record.query_text }}</h2>
+            <p class="summary-meta">{{ query_record.query_id }} | {{ total_results }} stored rows</p>
+          </article>
+          <article class="summary-card">
+            <p class="section-label">Ranking Basis</p>
+            <h2>{{ workspace_config.ranking_basis_title }}</h2>
+            <p class="summary-meta">
+              {% if model_info %}
+                {{ model_info.summary }}
+              {% else %}
+                {{ workspace_config.ranking_basis_summary }}
+              {% endif %}
+            </p>
+          </article>
+          <article class="summary-card">
+            <p class="section-label">Storage</p>
+            <h2>{{ 'Full ranking' if query_record.is_full_ranking else 'Partial ranking' }}</h2>
+            <p class="summary-meta">{{ query_record.result_file }}</p>
+          </article>
+          <article class="summary-card">
+            <p class="section-label">Execution Mode</p>
+            {% if created_state == 'created' %}
+              <h2>Fresh ranking saved</h2>
+              <p class="summary-meta">
+                The shared query history now includes this ranking and it can be reopened from any workspace.
+              </p>
+            {% elif created_state == 'reused' %}
+              <h2>Existing ranking reused</h2>
+              <p class="summary-meta">
+                The stored query file was reused instead of running a duplicate query.
+              </p>
+            {% else %}
+              <h2>Stored ranking loaded</h2>
+              <p class="summary-meta">
+                You are viewing the saved query inside the current {{ workspace_config.label|lower }} workspace.
+              </p>
+            {% endif %}
+          </article>
+        </section>
+
+        {% if not query_record.is_full_ranking %}
+          <div class="status-banner warning">
+            This query was stored before the full-ranking rule was enabled, so this workspace is limited to the saved partial result set.
+          </div>
+        {% endif %}
+      {% endif %}
+
+      {% include workspace_results_partial %}
+    </section>
+  </main>
+{% endblock %}
