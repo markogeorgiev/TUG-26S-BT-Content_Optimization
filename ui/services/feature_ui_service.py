@@ -21,12 +21,14 @@ CONTENT_FEATURES_CONFIG_FILE = CONTENT_FEATURES_DIR / "content_features_config.j
 RANK_FEATURE_PLOTS_DIR = ranking_backend.RANKINGS_DIR / "content_feature_rank_plots"
 PER_MODEL_RANK_FEATURE_PLOTS_DIR = ranking_backend.RANKINGS_DIR / "per_model_rank_feature_plots"
 
+RANK_FEATURE_PLOTS_SCHEMA_VERSION = 2
 RANK_FEATURE_MAX_RANK = 100
 RANK_FEATURE_ROLLING_WINDOW = 50
 RANK_FEATURE_MIN_PERIODS = 10
 MEDIAN_DROP_TOP_START = 1
 MEDIAN_DROP_TOP_END = 25
 MEDIAN_DROP_COMPARISON_SPAN = 25
+MIN_RANK_FEATURE_TOP_K = 25
 DEFAULT_RANK_FEATURE_PLOT_KIND = "ribbon"
 RANK_FEATURE_PLOT_KINDS = [
     {
@@ -47,7 +49,7 @@ RANK_FEATURE_PLOT_KINDS = [
     {
         "value": "violin",
         "label": "Violin plots",
-        "description": "Per-feature distribution violins across the four top-100 rank buckets.",
+        "description": "Per-feature distribution violins across the four selected top-k rank buckets.",
     },
 ]
 PER_MODEL_RANK_FEATURE_OPTIONS = [
@@ -183,14 +185,35 @@ def _normalize_per_model_rank_feature_key(model_key: str | None) -> str:
     return normalized
 
 
+def normalize_rank_feature_top_k(top_k: int | str | None) -> int:
+    max_available = ranking_backend.total_document_count()
+    raw_value = str(top_k or "").strip()
+    if not raw_value:
+        return min(RANK_FEATURE_MAX_RANK, max_available)
+
+    try:
+        normalized = int(raw_value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            f"Top-k must be an integer between {MIN_RANK_FEATURE_TOP_K} and {max_available}."
+        ) from exc
+
+    if normalized < MIN_RANK_FEATURE_TOP_K or normalized > max_available:
+        raise ValueError(
+            f"Top-k must be between {MIN_RANK_FEATURE_TOP_K} and {max_available}."
+        )
+    return normalized
+
+
 def _safe_collection_key(
     query_ids: list[str],
     plot_kind: str,
+    max_rank: int,
     extra_parts: list[str] | None = None,
 ) -> str:
     key_parts = [
         plot_kind,
-        f"max_rank={RANK_FEATURE_MAX_RANK}",
+        f"max_rank={max_rank}",
         f"window={RANK_FEATURE_ROLLING_WINDOW}",
         f"min_periods={RANK_FEATURE_MIN_PERIODS}",
         *(extra_parts or []),
@@ -281,6 +304,7 @@ def _plot_output_dir(collection_key: str, base_dir: Path = RANK_FEATURE_PLOTS_DI
 def _load_plot_metadata(
     collection_key: str,
     plot_kind: str,
+    max_rank: int,
     base_dir: Path = RANK_FEATURE_PLOTS_DIR,
 ) -> dict[str, Any] | None:
     metadata_path = _plot_metadata_path(collection_key, base_dir=base_dir)
@@ -295,11 +319,13 @@ def _load_plot_metadata(
     plot_files = metadata.get("plot_files") or []
     if not plot_files:
         return None
+    if int(metadata.get("schema_version") or 0) != RANK_FEATURE_PLOTS_SCHEMA_VERSION:
+        return None
     if str(metadata.get("plot_kind") or "") != plot_kind:
         return None
     rank_window = metadata.get("rank_window") or {}
     if (
-        int(rank_window.get("max_rank") or 0) != RANK_FEATURE_MAX_RANK
+        int(rank_window.get("max_rank") or 0) != max_rank
         or int(rank_window.get("rolling_window") or 0) != RANK_FEATURE_ROLLING_WINDOW
         or int(rank_window.get("min_periods") or 0) != RANK_FEATURE_MIN_PERIODS
         or bool(rank_window.get("center")) is not True
@@ -482,7 +508,8 @@ def _load_per_model_rank_rows(query_ids: list[str], model_key: str, max_rank: in
 
 def load_rank_feature_frame(query_ids: list[str], max_rank: int = RANK_FEATURE_MAX_RANK) -> pd.DataFrame:
     normalized_query_ids = _normalize_query_ids(query_ids)
-    rank_rows = _load_rank_rows(normalized_query_ids, max_rank=max_rank)
+    normalized_max_rank = normalize_rank_feature_top_k(max_rank)
+    rank_rows = _load_rank_rows(normalized_query_ids, max_rank=normalized_max_rank)
     if rank_rows.empty:
         raise ValueError("Selected rankings did not contain any rows to analyze.")
 
@@ -505,10 +532,11 @@ def load_per_model_rank_feature_frame(
     max_rank: int = RANK_FEATURE_MAX_RANK,
 ) -> pd.DataFrame:
     normalized_query_ids = _normalize_query_ids(query_ids)
+    normalized_max_rank = normalize_rank_feature_top_k(max_rank)
     rank_rows = _load_per_model_rank_rows(
         normalized_query_ids,
         model_key=model_key,
-        max_rank=max_rank,
+        max_rank=normalized_max_rank,
     )
     if rank_rows.empty:
         raise ValueError("Selected rankings did not contain any rows to analyze.")
@@ -855,13 +883,11 @@ def plot_feature_bucket_violin(
 
 
 def _median_drop_window(max_rank: int) -> dict[str, int]:
-    comparison_start = max(
-        MEDIAN_DROP_TOP_END + 1,
-        max_rank - MEDIAN_DROP_COMPARISON_SPAN + 1,
-    )
+    window_size = max(5, min(MEDIAN_DROP_TOP_END, max_rank // 4))
+    comparison_start = max(window_size + 1, max_rank - window_size + 1)
     return {
         "top_start": MEDIAN_DROP_TOP_START,
-        "top_end": MEDIAN_DROP_TOP_END,
+        "top_end": window_size,
         "comparison_start": comparison_start,
         "comparison_end": max_rank,
     }
@@ -902,11 +928,21 @@ def _median_drop_summary(
 def get_or_create_rank_feature_plots(
     query_ids: list[str],
     plot_kind: str = DEFAULT_RANK_FEATURE_PLOT_KIND,
+    top_k: int | str | None = None,
 ) -> dict[str, Any]:
     normalized_plot_kind = _normalize_plot_kind(plot_kind)
     normalized_query_ids = _normalize_query_ids(query_ids)
-    collection_key = _safe_collection_key(normalized_query_ids, normalized_plot_kind)
-    cached_metadata = _load_plot_metadata(collection_key, normalized_plot_kind)
+    normalized_top_k = normalize_rank_feature_top_k(top_k)
+    collection_key = _safe_collection_key(
+        normalized_query_ids,
+        normalized_plot_kind,
+        max_rank=normalized_top_k,
+    )
+    cached_metadata = _load_plot_metadata(
+        collection_key,
+        normalized_plot_kind,
+        max_rank=normalized_top_k,
+    )
     if cached_metadata is not None:
         return cached_metadata
 
@@ -916,7 +952,7 @@ def get_or_create_rank_feature_plots(
 
     analysis_df = load_rank_feature_frame(
         normalized_query_ids,
-        max_rank=RANK_FEATURE_MAX_RANK,
+        max_rank=normalized_top_k,
     )
     features = rank_feature_columns()
     plot_files: list[dict[str, Any]] = []
@@ -925,7 +961,7 @@ def get_or_create_rank_feature_plots(
         fig = plot_feature_consistency_heatmap(
             analysis_df,
             features,
-            max_rank=RANK_FEATURE_MAX_RANK,
+            max_rank=normalized_top_k,
         )
         file_name = "heatmap.png"
         plot_path = output_dir / file_name
@@ -947,7 +983,7 @@ def get_or_create_rank_feature_plots(
                 fig = plot_feature_bucket_violin(
                     analysis_df,
                     feature,
-                    max_rank=RANK_FEATURE_MAX_RANK,
+                    max_rank=normalized_top_k,
                 )
                 file_name = f"violin_{feature}.png"
                 title = f"{feature} distribution by rank bucket"
@@ -956,7 +992,7 @@ def get_or_create_rank_feature_plots(
                     analysis_df,
                     feature,
                     window=RANK_FEATURE_ROLLING_WINDOW,
-                    max_rank=RANK_FEATURE_MAX_RANK,
+                    max_rank=normalized_top_k,
                 )
                 file_name = f"overlay_{feature}.png"
                 title = f"{feature} vs. Rank"
@@ -965,7 +1001,7 @@ def get_or_create_rank_feature_plots(
                     analysis_df,
                     feature,
                     window=RANK_FEATURE_ROLLING_WINDOW,
-                    max_rank=RANK_FEATURE_MAX_RANK,
+                    max_rank=normalized_top_k,
                 )
                 file_name = f"plot_{feature}.png"
                 title = f"{feature} vs. Rank"
@@ -984,11 +1020,11 @@ def get_or_create_rank_feature_plots(
                 }
             )
 
-    summary_window = _median_drop_window(RANK_FEATURE_MAX_RANK)
+    summary_window = _median_drop_window(normalized_top_k)
     summary = _median_drop_summary(
         analysis_df,
         features,
-        max_rank=RANK_FEATURE_MAX_RANK,
+        max_rank=normalized_top_k,
     )
     print(
         "Largest feature median drops between "
@@ -1003,7 +1039,7 @@ def get_or_create_rank_feature_plots(
             f"comparison={item['comparison_median']:.6g})"
         )
     metadata = {
-        "schema_version": 1,
+        "schema_version": RANK_FEATURE_PLOTS_SCHEMA_VERSION,
         "collection_key": collection_key,
         "cache_status": "generated",
         "generated_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
@@ -1017,11 +1053,12 @@ def get_or_create_rank_feature_plots(
         "query_ids": normalized_query_ids,
         "queries": [records_by_id[query_id] for query_id in normalized_query_ids],
         "rank_window": {
-            "max_rank": RANK_FEATURE_MAX_RANK,
+            "max_rank": normalized_top_k,
             "rolling_window": RANK_FEATURE_ROLLING_WINDOW,
             "center": True,
             "min_periods": RANK_FEATURE_MIN_PERIODS,
         },
+        "rank_buckets": _rank_buckets(normalized_top_k),
         "median_drop_window": summary_window,
         "row_count": int(len(analysis_df)),
         "feature_count": int(len(features)),
@@ -1037,18 +1074,22 @@ def get_or_create_per_model_rank_feature_plots(
     query_ids: list[str],
     model_key: str,
     plot_kind: str = DEFAULT_RANK_FEATURE_PLOT_KIND,
+    top_k: int | str | None = None,
 ) -> dict[str, Any]:
     normalized_model = _normalize_per_model_rank_feature_key(model_key)
     normalized_plot_kind = _normalize_plot_kind(plot_kind)
     normalized_query_ids = _normalize_query_ids(query_ids)
+    normalized_top_k = normalize_rank_feature_top_k(top_k)
     collection_key = _safe_collection_key(
         normalized_query_ids,
         normalized_plot_kind,
+        max_rank=normalized_top_k,
         extra_parts=[f"model={normalized_model}"],
     )
     cached_metadata = _load_plot_metadata(
         collection_key,
         normalized_plot_kind,
+        max_rank=normalized_top_k,
         base_dir=PER_MODEL_RANK_FEATURE_PLOTS_DIR,
     )
     if cached_metadata is not None:
@@ -1064,7 +1105,7 @@ def get_or_create_per_model_rank_feature_plots(
     analysis_df = load_per_model_rank_feature_frame(
         normalized_query_ids,
         model_key=normalized_model,
-        max_rank=RANK_FEATURE_MAX_RANK,
+        max_rank=normalized_top_k,
     )
     features = rank_feature_columns()
     plot_files: list[dict[str, Any]] = []
@@ -1073,7 +1114,7 @@ def get_or_create_per_model_rank_feature_plots(
         fig = plot_feature_consistency_heatmap(
             analysis_df,
             features,
-            max_rank=RANK_FEATURE_MAX_RANK,
+            max_rank=normalized_top_k,
         )
         file_name = "heatmap.png"
         plot_path = output_dir / file_name
@@ -1095,7 +1136,7 @@ def get_or_create_per_model_rank_feature_plots(
                 fig = plot_feature_bucket_violin(
                     analysis_df,
                     feature,
-                    max_rank=RANK_FEATURE_MAX_RANK,
+                    max_rank=normalized_top_k,
                 )
                 file_name = f"violin_{feature}.png"
                 title = f"{feature} distribution by rank bucket"
@@ -1104,7 +1145,7 @@ def get_or_create_per_model_rank_feature_plots(
                     analysis_df,
                     feature,
                     window=RANK_FEATURE_ROLLING_WINDOW,
-                    max_rank=RANK_FEATURE_MAX_RANK,
+                    max_rank=normalized_top_k,
                 )
                 file_name = f"overlay_{feature}.png"
                 title = f"{feature} vs. Rank"
@@ -1113,7 +1154,7 @@ def get_or_create_per_model_rank_feature_plots(
                     analysis_df,
                     feature,
                     window=RANK_FEATURE_ROLLING_WINDOW,
-                    max_rank=RANK_FEATURE_MAX_RANK,
+                    max_rank=normalized_top_k,
                 )
                 file_name = f"plot_{feature}.png"
                 title = f"{feature} vs. Rank"
@@ -1132,14 +1173,14 @@ def get_or_create_per_model_rank_feature_plots(
                 }
             )
 
-    summary_window = _median_drop_window(RANK_FEATURE_MAX_RANK)
+    summary_window = _median_drop_window(normalized_top_k)
     summary = _median_drop_summary(
         analysis_df,
         features,
-        max_rank=RANK_FEATURE_MAX_RANK,
+        max_rank=normalized_top_k,
     )
     metadata = {
-        "schema_version": 1,
+        "schema_version": RANK_FEATURE_PLOTS_SCHEMA_VERSION,
         "collection_key": collection_key,
         "cache_status": "generated",
         "generated_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
@@ -1155,11 +1196,12 @@ def get_or_create_per_model_rank_feature_plots(
         "query_ids": normalized_query_ids,
         "queries": [records_by_id[query_id] for query_id in normalized_query_ids],
         "rank_window": {
-            "max_rank": RANK_FEATURE_MAX_RANK,
+            "max_rank": normalized_top_k,
             "rolling_window": RANK_FEATURE_ROLLING_WINDOW,
             "center": True,
             "min_periods": RANK_FEATURE_MIN_PERIODS,
         },
+        "rank_buckets": _rank_buckets(normalized_top_k),
         "median_drop_window": summary_window,
         "row_count": int(len(analysis_df)),
         "feature_count": int(len(features)),

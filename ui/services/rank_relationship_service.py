@@ -17,14 +17,13 @@ RANK_RELATIONSHIP_DIR = ranking_backend.RANKINGS_DIR / "rank_relationship"
 PER_MODEL_RANK_RELATIONSHIP_DIR = ranking_backend.RANKINGS_DIR / "per_model_rank_relationship"
 RESULTS_DIR_NAME = "results"
 METADATA_FILE_NAME = "metadata.json"
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 PER_MODEL_SCHEMA_VERSION = 2
 
 MODEL_SCORE_COLUMNS = {
     "hybrid": "hybrid_score",
     "bm25": "bm25_score_norm",
     "semantic": "semantic_score_norm",
-    "pagerank": "pagerank_norm",
 }
 
 MODEL_HEATMAP_FEATURES = [

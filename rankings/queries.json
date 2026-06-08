@@ -3,58 +3,10 @@
   "queries": [
     {
       "query_id": "q000001",
-      "query_text": "Are birds good pets?",
-      "query_key": "are birds good pets",
-      "query_slug": "are-birds-good-pets",
-      "executed_at_utc": "2026-05-30T18:22:32Z",
-      "top_k": 21058,
-      "result_count": 21058,
-      "stored_result_count": 21058,
-      "stored_full_ranking": true,
-      "weights": {
-        "bm25": 0.4,
-        "semantic": 0.4,
-        "pagerank": 0.2
-      },
-      "normalization": "min_max_per_metric_per_query",
-      "semantic_document_aggregation": {
-        "top_chunk_1": 0.4,
-        "top_chunk_2": 0.35,
-        "top_chunk_3": 0.2,
-        "remaining_chunks_mean": 0.05
-      },
-      "result_file": "rankings\\initial_rankings\\q000001_are-birds-good-pets.parquet"
-    },
-    {
-      "query_id": "q000002",
-      "query_text": "Best dogs for small apartments",
-      "query_key": "best dogs for small apartments",
-      "query_slug": "best-dogs-for-small-apartments",
-      "executed_at_utc": "2026-06-04T16:17:34Z",
-      "top_k": 21058,
-      "result_count": 21058,
-      "stored_result_count": 21058,
-      "stored_full_ranking": true,
-      "weights": {
-        "bm25": 0.4,
-        "semantic": 0.4,
-        "pagerank": 0.2
-      },
-      "normalization": "min_max_per_metric_per_query",
-      "semantic_document_aggregation": {
-        "top_chunk_1": 0.4,
-        "top_chunk_2": 0.35,
-        "top_chunk_3": 0.2,
-        "remaining_chunks_mean": 0.05
-      },
-      "result_file": "rankings\\initial_rankings\\q000002_best-dogs-for-small-apartments.parquet"
-    },
-    {
-      "query_id": "q000003",
       "query_text": "The most popular orange cat",
       "query_key": "the most popular orange cat",
       "query_slug": "the-most-popular-orange-cat",
-      "executed_at_utc": "2026-06-04T16:18:08Z",
+      "executed_at_utc": "2026-06-07T18:52:14Z",
       "top_k": 21058,
       "result_count": 21058,
       "stored_result_count": 21058,
@@ -71,14 +23,62 @@
         "top_chunk_3": 0.2,
         "remaining_chunks_mean": 0.05
       },
-      "result_file": "rankings\\initial_rankings\\q000003_the-most-popular-orange-cat.parquet"
+      "result_file": "rankings\\initial_rankings\\q000001_the-most-popular-orange-cat.parquet"
+    },
+    {
+      "query_id": "q000002",
+      "query_text": "Calmest cat breeds",
+      "query_key": "calmest cat breeds",
+      "query_slug": "calmest-cat-breeds",
+      "executed_at_utc": "2026-06-07T18:52:29Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000002_calmest-cat-breeds.parquet"
+    },
+    {
+      "query_id": "q000003",
+      "query_text": "Most expensive cats",
+      "query_key": "most expensive cats",
+      "query_slug": "most-expensive-cats",
+      "executed_at_utc": "2026-06-07T18:52:34Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000003_most-expensive-cats.parquet"
     },
     {
       "query_id": "q000004",
-      "query_text": "Low maintenance pets for beginners",
-      "query_key": "low maintenance pets for beginners",
-      "query_slug": "low-maintenance-pets-for-beginners",
-      "executed_at_utc": "2026-06-04T16:23:07Z",
+      "query_text": "How long do cats live?",
+      "query_key": "how long do cats live",
+      "query_slug": "how-long-do-cats-live",
+      "executed_at_utc": "2026-06-07T18:52:41Z",
       "top_k": 21058,
       "result_count": 21058,
       "stored_result_count": 21058,
@@ -95,14 +95,14 @@
         "top_chunk_3": 0.2,
         "remaining_chunks_mean": 0.05
       },
-      "result_file": "rankings\\initial_rankings\\q000004_low-maintenance-pets-for-beginners.parquet"
+      "result_file": "rankings\\initial_rankings\\q000004_how-long-do-cats-live.parquet"
     },
     {
       "query_id": "q000005",
-      "query_text": "What should you feed a chameleon",
-      "query_key": "what should you feed a chameleon",
-      "query_slug": "what-should-you-feed-a-chameleon",
-      "executed_at_utc": "2026-06-04T17:28:20Z",
+      "query_text": "What is the weirdest cat?",
+      "query_key": "what is the weirdest cat",
+      "query_slug": "what-is-the-weirdest-cat",
+      "executed_at_utc": "2026-06-07T18:52:48Z",
       "top_k": 21058,
       "result_count": 21058,
       "stored_result_count": 21058,
@@ -119,14 +119,14 @@
         "top_chunk_3": 0.2,
         "remaining_chunks_mean": 0.05
       },
-      "result_file": "rankings\\initial_rankings\\q000005_what-should-you-feed-a-chameleon.parquet"
+      "result_file": "rankings\\initial_rankings\\q000005_what-is-the-weirdest-cat.parquet"
     },
     {
       "query_id": "q000006",
-      "query_text": "Can you keep a fish as a pet?",
-      "query_key": "can you keep a fish as a pet",
-      "query_slug": "can-you-keep-a-fish-as-a-pet",
-      "executed_at_utc": "2026-06-04T17:41:21Z",
+      "query_text": "Most healthy dogs",
+      "query_key": "most healthy dogs",
+      "query_slug": "most-healthy-dogs",
+      "executed_at_utc": "2026-06-07T18:53:12Z",
       "top_k": 21058,
       "result_count": 21058,
       "stored_result_count": 21058,
@@ -143,134 +143,14 @@
         "top_chunk_3": 0.2,
         "remaining_chunks_mean": 0.05
       },
-      "result_file": "rankings\\initial_rankings\\q000006_can-you-keep-a-fish-as-a-pet.parquet"
+      "result_file": "rankings\\initial_rankings\\q000006_most-healthy-dogs.parquet"
     },
     {
       "query_id": "q000007",
-      "query_text": "The most common lizard that people keep as a pet",
-      "query_key": "the most common lizard that people keep as a pet",
-      "query_slug": "the-most-common-lizard-that-people-keep-as-a-pet",
-      "executed_at_utc": "2026-06-04T19:55:09Z",
-      "top_k": 21058,
-      "result_count": 21058,
-      "stored_result_count": 21058,
-      "stored_full_ranking": true,
-      "weights": {
-        "bm25": 0.4,
-        "semantic": 0.4,
-        "pagerank": 0.2
-      },
-      "normalization": "min_max_per_metric_per_query",
-      "semantic_document_aggregation": {
-        "top_chunk_1": 0.4,
-        "top_chunk_2": 0.35,
-        "top_chunk_3": 0.2,
-        "remaining_chunks_mean": 0.05
-      },
-      "result_file": "rankings\\initial_rankings\\q000007_the-most-common-lizard-that-people-keep-as-a-pet.parquet"
-    },
-    {
-      "query_id": "q000008",
-      "query_text": "Easy to manage parrots",
-      "query_key": "easy to manage parrots",
-      "query_slug": "easy-to-manage-parrots",
-      "executed_at_utc": "2026-06-04T20:01:04Z",
-      "top_k": 21058,
-      "result_count": 21058,
-      "stored_result_count": 21058,
-      "stored_full_ranking": true,
-      "weights": {
-        "bm25": 0.4,
-        "semantic": 0.4,
-        "pagerank": 0.2
-      },
-      "normalization": "min_max_per_metric_per_query",
-      "semantic_document_aggregation": {
-        "top_chunk_1": 0.4,
-        "top_chunk_2": 0.35,
-        "top_chunk_3": 0.2,
-        "remaining_chunks_mean": 0.05
-      },
-      "result_file": "rankings\\initial_rankings\\q000008_easy-to-manage-parrots.parquet"
-    },
-    {
-      "query_id": "q000009",
-      "query_text": "most beautiful dog ever",
-      "query_key": "most beautiful dog ever",
-      "query_slug": "most-beautiful-dog-ever",
-      "executed_at_utc": "2026-06-04T20:52:48Z",
-      "top_k": 21058,
-      "result_count": 21058,
-      "stored_result_count": 21058,
-      "stored_full_ranking": true,
-      "weights": {
-        "bm25": 0.4,
-        "semantic": 0.4,
-        "pagerank": 0.2
-      },
-      "normalization": "min_max_per_metric_per_query",
-      "semantic_document_aggregation": {
-        "top_chunk_1": 0.4,
-        "top_chunk_2": 0.35,
-        "top_chunk_3": 0.2,
-        "remaining_chunks_mean": 0.05
-      },
-      "result_file": "rankings\\initial_rankings\\q000009_most-beautiful-dog-ever.parquet"
-    },
-    {
-      "query_id": "q000010",
-      "query_text": "Do all dogs need to go on a walk everyday?",
-      "query_key": "do all dogs need to go on a walk everyday",
-      "query_slug": "do-all-dogs-need-to-go-on-a-walk-everyday",
-      "executed_at_utc": "2026-06-04T20:54:20Z",
-      "top_k": 21058,
-      "result_count": 21058,
-      "stored_result_count": 21058,
-      "stored_full_ranking": true,
-      "weights": {
-        "bm25": 0.4,
-        "semantic": 0.4,
-        "pagerank": 0.2
-      },
-      "normalization": "min_max_per_metric_per_query",
-      "semantic_document_aggregation": {
-        "top_chunk_1": 0.4,
-        "top_chunk_2": 0.35,
-        "top_chunk_3": 0.2,
-        "remaining_chunks_mean": 0.05
-      },
-      "result_file": "rankings\\initial_rankings\\q000010_do-all-dogs-need-to-go-on-a-walk-everyday.parquet"
-    },
-    {
-      "query_id": "q000011",
-      "query_text": "dog with brown fur",
-      "query_key": "dog with brown fur",
-      "query_slug": "dog-with-brown-fur",
-      "executed_at_utc": "2026-06-04T20:55:51Z",
-      "top_k": 21058,
-      "result_count": 21058,
-      "stored_result_count": 21058,
-      "stored_full_ranking": true,
-      "weights": {
-        "bm25": 0.4,
-        "semantic": 0.4,
-        "pagerank": 0.2
-      },
-      "normalization": "min_max_per_metric_per_query",
-      "semantic_document_aggregation": {
-        "top_chunk_1": 0.4,
-        "top_chunk_2": 0.35,
-        "top_chunk_3": 0.2,
-        "remaining_chunks_mean": 0.05
-      },
-      "result_file": "rankings\\initial_rankings\\q000011_dog-with-brown-fur.parquet"
-    },
-    {
-      "query_id": "q000012",
       "query_text": "Dog breed that doesn't shed",
       "query_key": "dog breed that doesn t shed",
       "query_slug": "dog-breed-that-doesn-t-shed",
-      "executed_at_utc": "2026-06-04T23:03:26Z",
+      "executed_at_utc": "2026-06-07T18:53:16Z",
       "top_k": 21058,
       "result_count": 21058,
       "stored_result_count": 21058,
@@ -287,14 +167,38 @@
         "top_chunk_3": 0.2,
         "remaining_chunks_mean": 0.05
       },
-      "result_file": "rankings\\initial_rankings\\q000012_dog-breed-that-doesn-t-shed.parquet"
+      "result_file": "rankings\\initial_rankings\\q000007_dog-breed-that-doesn-t-shed.parquet"
     },
     {
-      "query_id": "q000013",
+      "query_id": "q000008",
+      "query_text": "Do all dogs need to go on a walk everyday?",
+      "query_key": "do all dogs need to go on a walk everyday",
+      "query_slug": "do-all-dogs-need-to-go-on-a-walk-everyday",
+      "executed_at_utc": "2026-06-07T18:53:21Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000008_do-all-dogs-need-to-go-on-a-walk-everyday.parquet"
+    },
+    {
+      "query_id": "q000009",
       "query_text": "Healthy diet for dogs",
       "query_key": "healthy diet for dogs",
       "query_slug": "healthy-diet-for-dogs",
-      "executed_at_utc": "2026-06-04T23:03:45Z",
+      "executed_at_utc": "2026-06-07T18:53:25Z",
       "top_k": 21058,
       "result_count": 21058,
       "stored_result_count": 21058,
@@ -311,14 +215,110 @@
         "top_chunk_3": 0.2,
         "remaining_chunks_mean": 0.05
       },
-      "result_file": "rankings\\initial_rankings\\q000013_healthy-diet-for-dogs.parquet"
+      "result_file": "rankings\\initial_rankings\\q000009_healthy-diet-for-dogs.parquet"
+    },
+    {
+      "query_id": "q000010",
+      "query_text": "Best dogs for small apartments",
+      "query_key": "best dogs for small apartments",
+      "query_slug": "best-dogs-for-small-apartments",
+      "executed_at_utc": "2026-06-07T18:53:28Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000010_best-dogs-for-small-apartments.parquet"
+    },
+    {
+      "query_id": "q000011",
+      "query_text": "Best exotic pet",
+      "query_key": "best exotic pet",
+      "query_slug": "best-exotic-pet",
+      "executed_at_utc": "2026-06-07T18:53:47Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000011_best-exotic-pet.parquet"
+    },
+    {
+      "query_id": "q000012",
+      "query_text": "The most common lizard to keep",
+      "query_key": "the most common lizard to keep",
+      "query_slug": "the-most-common-lizard-to-keep",
+      "executed_at_utc": "2026-06-07T18:53:50Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000012_the-most-common-lizard-to-keep.parquet"
+    },
+    {
+      "query_id": "q000013",
+      "query_text": "What should you feed a chameleon?",
+      "query_key": "what should you feed a chameleon",
+      "query_slug": "what-should-you-feed-a-chameleon",
+      "executed_at_utc": "2026-06-07T18:53:54Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000013_what-should-you-feed-a-chameleon.parquet"
     },
     {
       "query_id": "q000014",
-      "query_text": "How often should I take dog to the vet",
-      "query_key": "how often should i take dog to the vet",
-      "query_slug": "how-often-should-i-take-dog-to-the-vet",
-      "executed_at_utc": "2026-06-04T23:09:44Z",
+      "query_text": "Non-poisonous snakes for pets",
+      "query_key": "non poisonous snakes for pets",
+      "query_slug": "non-poisonous-snakes-for-pets",
+      "executed_at_utc": "2026-06-07T18:53:57Z",
       "top_k": 21058,
       "result_count": 21058,
       "stored_result_count": 21058,
@@ -335,14 +335,14 @@
         "top_chunk_3": 0.2,
         "remaining_chunks_mean": 0.05
       },
-      "result_file": "rankings\\initial_rankings\\q000014_how-often-should-i-take-dog-to-the-vet.parquet"
+      "result_file": "rankings\\initial_rankings\\q000014_non-poisonous-snakes-for-pets.parquet"
     },
     {
       "query_id": "q000015",
-      "query_text": "best exotic pet",
-      "query_key": "best exotic pet",
-      "query_slug": "best-exotic-pet",
-      "executed_at_utc": "2026-06-05T20:35:14Z",
+      "query_text": "Best pet spider",
+      "query_key": "best pet spider",
+      "query_slug": "best-pet-spider",
+      "executed_at_utc": "2026-06-07T18:54:02Z",
       "top_k": 21058,
       "result_count": 21058,
       "stored_result_count": 21058,
@@ -359,7 +359,367 @@
         "top_chunk_3": 0.2,
         "remaining_chunks_mean": 0.05
       },
-      "result_file": "rankings\\initial_rankings\\q000015_best-exotic-pet.parquet"
+      "result_file": "rankings\\initial_rankings\\q000015_best-pet-spider.parquet"
+    },
+    {
+      "query_id": "q000016",
+      "query_text": "Can you keep a fish as a pet?",
+      "query_key": "can you keep a fish as a pet",
+      "query_slug": "can-you-keep-a-fish-as-a-pet",
+      "executed_at_utc": "2026-06-07T18:54:06Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000016_can-you-keep-a-fish-as-a-pet.parquet"
+    },
+    {
+      "query_id": "q000017",
+      "query_text": "How long do goldfish live?",
+      "query_key": "how long do goldfish live",
+      "query_slug": "how-long-do-goldfish-live",
+      "executed_at_utc": "2026-06-07T18:54:09Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000017_how-long-do-goldfish-live.parquet"
+    },
+    {
+      "query_id": "q000018",
+      "query_text": "Fish for medium-sized aquarium",
+      "query_key": "fish for medium sized aquarium",
+      "query_slug": "fish-for-medium-sized-aquarium",
+      "executed_at_utc": "2026-06-07T18:54:13Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000018_fish-for-medium-sized-aquarium.parquet"
+    },
+    {
+      "query_id": "q000019",
+      "query_text": "What do pet fish eat?",
+      "query_key": "what do pet fish eat",
+      "query_slug": "what-do-pet-fish-eat",
+      "executed_at_utc": "2026-06-07T18:54:16Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000019_what-do-pet-fish-eat.parquet"
+    },
+    {
+      "query_id": "q000020",
+      "query_text": "Most ommon tropical fish",
+      "query_key": "most ommon tropical fish",
+      "query_slug": "most-ommon-tropical-fish",
+      "executed_at_utc": "2026-06-07T18:54:20Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000020_most-ommon-tropical-fish.parquet"
+    },
+    {
+      "query_id": "q000021",
+      "query_text": "Are birds good pets?",
+      "query_key": "are birds good pets",
+      "query_slug": "are-birds-good-pets",
+      "executed_at_utc": "2026-06-07T18:54:23Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000021_are-birds-good-pets.parquet"
+    },
+    {
+      "query_id": "q000022",
+      "query_text": "Talking parrot for small apartment",
+      "query_key": "talking parrot for small apartment",
+      "query_slug": "talking-parrot-for-small-apartment",
+      "executed_at_utc": "2026-06-07T18:54:27Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000022_talking-parrot-for-small-apartment.parquet"
+    },
+    {
+      "query_id": "q000023",
+      "query_text": "Easy to manage parrots",
+      "query_key": "easy to manage parrots",
+      "query_slug": "easy-to-manage-parrots",
+      "executed_at_utc": "2026-06-07T18:54:31Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000023_easy-to-manage-parrots.parquet"
+    },
+    {
+      "query_id": "q000024",
+      "query_text": "Easiest birds to train",
+      "query_key": "easiest birds to train",
+      "query_slug": "easiest-birds-to-train",
+      "executed_at_utc": "2026-06-07T18:54:35Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000024_easiest-birds-to-train.parquet"
+    },
+    {
+      "query_id": "q000025",
+      "query_text": "Can cockatiels learn to talk?",
+      "query_key": "can cockatiels learn to talk",
+      "query_slug": "can-cockatiels-learn-to-talk",
+      "executed_at_utc": "2026-06-07T18:54:38Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000025_can-cockatiels-learn-to-talk.parquet"
+    },
+    {
+      "query_id": "q000026",
+      "query_text": "Low maintenance pets for beginners",
+      "query_key": "low maintenance pets for beginners",
+      "query_slug": "low-maintenance-pets-for-beginners",
+      "executed_at_utc": "2026-06-07T18:54:45Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000026_low-maintenance-pets-for-beginners.parquet"
+    },
+    {
+      "query_id": "q000027",
+      "query_text": "Best pets for kids",
+      "query_key": "best pets for kids",
+      "query_slug": "best-pets-for-kids",
+      "executed_at_utc": "2026-06-07T18:54:48Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000027_best-pets-for-kids.parquet"
+    },
+    {
+      "query_id": "q000028",
+      "query_text": "Best pets for students",
+      "query_key": "best pets for students",
+      "query_slug": "best-pets-for-students",
+      "executed_at_utc": "2026-06-07T18:54:52Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000028_best-pets-for-students.parquet"
+    },
+    {
+      "query_id": "q000029",
+      "query_text": "Cheapest animal to own",
+      "query_key": "cheapest animal to own",
+      "query_slug": "cheapest-animal-to-own",
+      "executed_at_utc": "2026-06-07T18:54:56Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000029_cheapest-animal-to-own.parquet"
+    },
+    {
+      "query_id": "q000030",
+      "query_text": "Pets that can live indoors full-time",
+      "query_key": "pets that can live indoors full time",
+      "query_slug": "pets-that-can-live-indoors-full-time",
+      "executed_at_utc": "2026-06-07T18:54:59Z",
+      "top_k": 21058,
+      "result_count": 21058,
+      "stored_result_count": 21058,
+      "stored_full_ranking": true,
+      "weights": {
+        "bm25": 0.4,
+        "semantic": 0.4,
+        "pagerank": 0.2
+      },
+      "normalization": "min_max_per_metric_per_query",
+      "semantic_document_aggregation": {
+        "top_chunk_1": 0.4,
+        "top_chunk_2": 0.35,
+        "top_chunk_3": 0.2,
+        "remaining_chunks_mean": 0.05
+      },
+      "result_file": "rankings\\initial_rankings\\q000030_pets-that-can-live-indoors-full-time.parquet"
     }
   ]
 }

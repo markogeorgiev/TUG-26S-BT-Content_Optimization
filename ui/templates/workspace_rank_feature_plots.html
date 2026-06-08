@@ -32,6 +32,23 @@
           {% endfor %}
         </div>
 
+        <div class="plot-kind-control">
+          <label class="field-label" for="{{ workspace_key }}-top-k">Top-k cutoff</label>
+          <input
+            id="{{ workspace_key }}-top-k"
+            type="number"
+            name="top_k"
+            min="{{ min_top_k }}"
+            step="1"
+            value="{{ selected_top_k }}"
+            class="rank-plot-select"
+          >
+          <p class="helper-text">
+            Analyze only ranks <code>1</code>-<code>k</code>. Minimum supported value is
+            <code>{{ min_top_k }}</code>.
+          </p>
+        </div>
+
         <div class="query-selection-toolbar">
           <button type="button" class="secondary-button" data-select-all-rank-queries>Select all</button>
           <button type="button" class="secondary-button" data-clear-rank-queries>Clear</button>
@@ -83,7 +100,9 @@
         <article class="summary-card">
           <p class="section-label">Selected Collection</p>
           <h2>{{ analysis.queries|length }} queries</h2>
-          <p class="summary-meta">{{ '{:,}'.format(analysis.row_count) }} ranked article rows analyzed</p>
+          <p class="summary-meta">
+            Top {{ analysis.rank_window.max_rank }} | {{ '{:,}'.format(analysis.row_count) }} ranked article rows analyzed
+          </p>
         </article>
         <article class="summary-card">
           <p class="section-label">Storage</p>
@@ -160,14 +179,18 @@
             <h2>{{ analysis.plot_kind_label }}</h2>
             <p class="helper-text">
               {% if analysis.plot_kind == 'heatmap' %}
-                The heatmap uses four rank buckets: 1-25, 26-50, 51-75, and 76-100.
+                The heatmap uses four equal rank buckets across the selected top-{{ analysis.rank_window.max_rank }} window:
+                {% for bucket in analysis.rank_buckets %}{{ bucket.label }}{% if not loop.last %}, {% endif %}{% endfor %}.
                 Light cells are more consistent; dark cells have wider normalized IQR spread.
               {% elif analysis.plot_kind == 'violin' %}
-                Each per-feature violin plot shows the feature value distribution across rank buckets 1-25, 26-50, 51-75, and 76-100.
+                Each per-feature violin plot shows the feature value distribution across rank buckets
+                {% for bucket in analysis.rank_buckets %}{{ bucket.label }}{% if not loop.last %}, {% endif %}{% endfor %}.
               {% elif analysis.plot_kind == 'overlay' %}
-                Each per-feature plot draws faint per-query rolling medians plus a bold aggregate rolling median over ranks 1-100.
+                Each per-feature plot draws faint per-query rolling medians plus a bold aggregate rolling median over ranks
+                1-{{ analysis.rank_window.max_rank }}.
               {% else %}
-                Each per-feature ribbon uses a centered rolling window of 50 rows, min periods 10, over ranks 1-100.
+                Each per-feature ribbon uses a centered rolling window of {{ analysis.rank_window.rolling_window }} rows,
+                min periods {{ analysis.rank_window.min_periods }}, over ranks 1-{{ analysis.rank_window.max_rank }}.
               {% endif %}
             </p>
           </div>
@@ -188,7 +211,7 @@
       <section class="results-card">
         <div class="empty-state feature-empty-state">
           <p class="section-label">Rank Feature Plots</p>
-          <h2>Select one or more saved queries and a plot kind.</h2>
+          <h2>Select one or more saved queries, a plot kind, and a top-k cutoff.</h2>
           <p>
             The plots join saved rankings from <code>rankings/initial_rankings/</code>
             with article features from <code>data/content_features/</code>.

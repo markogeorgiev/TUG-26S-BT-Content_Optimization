@@ -23,10 +23,13 @@ from ui.services.content_experiment_service import (
 )
 from ui.services.feature_ui_service import (
     DEFAULT_RANK_FEATURE_PLOT_KIND,
+    MIN_RANK_FEATURE_TOP_K,
+    RANK_FEATURE_MAX_RANK,
     content_feature_document_count,
     get_article_features,
     get_or_create_per_model_rank_feature_plots,
     get_or_create_rank_feature_plots,
+    normalize_rank_feature_top_k,
     rank_feature_plot_kind_options,
     resolve_article,
     resolve_per_model_rank_feature_plot_path,
@@ -81,7 +84,7 @@ WORKSPACE_CONFIGS: dict[str, dict[str, Any]] = {
         "rank_feature_heading": "Hybrid Rank Feature Plots",
         "rank_feature_note": (
             "Select one or more saved hybrid rankings and analyze how article features behave "
-            "across their top 100 positions."
+            "across the top-k positions you choose."
         ),
         "experiments_heading": "Hybrid Content Change Experiments",
         "experiments_note": (
@@ -116,7 +119,7 @@ WORKSPACE_CONFIGS: dict[str, dict[str, Any]] = {
         "rank_feature_heading": "Dense Rank Feature Plots",
         "rank_feature_note": (
             "Select saved queries and study how article features behave across SBERT-only "
-            "ranking positions in the top 100."
+            "ranking positions in the top-k window you choose."
         ),
         "experiments_heading": "Dense Content Change Experiments",
         "experiments_note": (
@@ -151,7 +154,7 @@ WORKSPACE_CONFIGS: dict[str, dict[str, Any]] = {
         "rank_feature_heading": "Sparse Rank Feature Plots",
         "rank_feature_note": (
             "Select saved queries and study how article features behave across BM25-only "
-            "ranking positions in the top 100."
+            "ranking positions in the top-k window you choose."
         ),
         "experiments_heading": "Sparse Content Change Experiments",
         "experiments_note": (
@@ -444,6 +447,7 @@ def create_app() -> Flask:
         *,
         selected_query_ids: list[str] | None = None,
         selected_plot_kind: str = DEFAULT_RANK_FEATURE_PLOT_KIND,
+        selected_top_k: int | str = RANK_FEATURE_MAX_RANK,
         analysis: dict | None = None,
         error_message: str = "",
     ):
@@ -477,6 +481,8 @@ def create_app() -> Flask:
             plot_kind_options=plot_kind_options,
             selected_query_ids=selected_ids,
             selected_plot_kind=selected_plot_kind,
+            selected_top_k=selected_top_k,
+            min_top_k=MIN_RANK_FEATURE_TOP_K,
             analysis=analysis,
             error_message=error_message,
             rank_plot_form_action=url_for("workspace_rank_feature_plots", workspace=workspace),
@@ -693,30 +699,39 @@ def create_app() -> Flask:
             "plot_kind",
             DEFAULT_RANK_FEATURE_PLOT_KIND,
         ).strip()
+        selected_top_k_raw = request.args.get(
+            "top_k",
+            str(RANK_FEATURE_MAX_RANK),
+        ).strip()
 
         if not selected_query_ids:
             return render_workspace_rank_feature_plots_page(
                 workspace,
                 selected_plot_kind=selected_plot_kind,
+                selected_top_k=selected_top_k_raw or RANK_FEATURE_MAX_RANK,
             )
 
         try:
+            normalized_top_k = normalize_rank_feature_top_k(selected_top_k_raw)
             if workspace == "hybrid":
                 analysis = get_or_create_rank_feature_plots(
                     selected_query_ids,
                     plot_kind=selected_plot_kind,
+                    top_k=normalized_top_k,
                 )
             else:
                 analysis = get_or_create_per_model_rank_feature_plots(
                     selected_query_ids,
                     model_key=workspace_model_key(workspace),
                     plot_kind=selected_plot_kind,
+                    top_k=normalized_top_k,
                 )
         except (FileNotFoundError, RuntimeError, ValueError) as exc:
             return render_workspace_rank_feature_plots_page(
                 workspace,
                 selected_query_ids=selected_query_ids,
                 selected_plot_kind=selected_plot_kind,
+                selected_top_k=selected_top_k_raw or RANK_FEATURE_MAX_RANK,
                 error_message=str(exc),
             )
 
@@ -724,6 +739,7 @@ def create_app() -> Flask:
             workspace,
             selected_query_ids=analysis["query_ids"],
             selected_plot_kind=analysis["plot_kind"],
+            selected_top_k=analysis["rank_window"]["max_rank"],
             analysis=analysis,
         )
 
@@ -1083,6 +1099,7 @@ def create_app() -> Flask:
                 workspace="hybrid",
                 query_id=request.args.getlist("query_id"),
                 plot_kind=request.args.get("plot_kind", DEFAULT_RANK_FEATURE_PLOT_KIND),
+                top_k=request.args.get("top_k", str(RANK_FEATURE_MAX_RANK)),
             )
         )
 
