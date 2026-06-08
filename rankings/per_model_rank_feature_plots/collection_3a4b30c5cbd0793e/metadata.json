@@ -1,0 +1,290 @@
+{
+  "schema_version": 1,
+  "collection_key": "collection_3a4b30c5cbd0793e",
+  "cache_status": "generated",
+  "generated_at_utc": "2026-06-07T19:39:42+00:00",
+  "output_dir": "rankings\\per_model_rank_feature_plots\\collection_3a4b30c5cbd0793e",
+  "plot_kind": "violin",
+  "plot_kind_label": "Violin plots",
+  "selected_model": "sbert",
+  "selected_model_label": "SBERT only",
+  "query_ids": [
+    "q000006",
+    "q000007",
+    "q000008",
+    "q000009",
+    "q000010"
+  ],
+  "queries": [
+    {
+      "query_id": "q000006",
+      "query_text": "Most healthy dogs",
+      "query_slug": "most-healthy-dogs",
+      "query_key": "most healthy dogs",
+      "executed_at_utc": "2026-06-07T18:53:12Z",
+      "result_file": "rankings\\initial_rankings\\q000006_most-healthy-dogs.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    },
+    {
+      "query_id": "q000007",
+      "query_text": "Dog breed that doesn't shed",
+      "query_slug": "dog-breed-that-doesn-t-shed",
+      "query_key": "dog breed that doesn t shed",
+      "executed_at_utc": "2026-06-07T18:53:16Z",
+      "result_file": "rankings\\initial_rankings\\q000007_dog-breed-that-doesn-t-shed.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    },
+    {
+      "query_id": "q000008",
+      "query_text": "Do all dogs need to go on a walk everyday?",
+      "query_slug": "do-all-dogs-need-to-go-on-a-walk-everyday",
+      "query_key": "do all dogs need to go on a walk everyday",
+      "executed_at_utc": "2026-06-07T18:53:21Z",
+      "result_file": "rankings\\initial_rankings\\q000008_do-all-dogs-need-to-go-on-a-walk-everyday.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    },
+    {
+      "query_id": "q000009",
+      "query_text": "Healthy diet for dogs",
+      "query_slug": "healthy-diet-for-dogs",
+      "query_key": "healthy diet for dogs",
+      "executed_at_utc": "2026-06-07T18:53:25Z",
+      "result_file": "rankings\\initial_rankings\\q000009_healthy-diet-for-dogs.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    },
+    {
+      "query_id": "q000010",
+      "query_text": "Best dogs for small apartments",
+      "query_slug": "best-dogs-for-small-apartments",
+      "query_key": "best dogs for small apartments",
+      "executed_at_utc": "2026-06-07T18:53:28Z",
+      "result_file": "rankings\\initial_rankings\\q000010_best-dogs-for-small-apartments.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    }
+  ],
+  "rank_window": {
+    "max_rank": 100,
+    "rolling_window": 50,
+    "center": true,
+    "min_periods": 10
+  },
+  "median_drop_window": {
+    "top_start": 1,
+    "top_end": 25,
+    "comparison_start": 76,
+    "comparison_end": 100
+  },
+  "row_count": 500,
+  "feature_count": 15,
+  "features": [
+    "char_count",
+    "non_whitespace_char_count",
+    "word_count",
+    "token_count",
+    "sentence_count",
+    "avg_words_per_sentence",
+    "avg_token_length",
+    "syllable_count",
+    "avg_syllables_per_word",
+    "flesch_kincaid_grade",
+    "gunning_fog_index",
+    "lexical_density",
+    "lexical_diversity",
+    "sentiment_polarity",
+    "entity_count"
+  ],
+  "plot_files": [
+    {
+      "feature": "char_count",
+      "title": "char_count distribution by rank bucket",
+      "file_name": "violin_char_count.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_3a4b30c5cbd0793e\\violin_char_count.png"
+    },
+    {
+      "feature": "non_whitespace_char_count",
+      "title": "non_whitespace_char_count distribution by rank bucket",
+      "file_name": "violin_non_whitespace_char_count.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_3a4b30c5cbd0793e\\violin_non_whitespace_char_count.png"
+    },
+    {
+      "feature": "word_count",
+      "title": "word_count distribution by rank bucket",
+      "file_name": "violin_word_count.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_3a4b30c5cbd0793e\\violin_word_count.png"
+    },
+    {
+      "feature": "token_count",
+      "title": "token_count distribution by rank bucket",
+      "file_name": "violin_token_count.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_3a4b30c5cbd0793e\\violin_token_count.png"
+    },
+    {
+      "feature": "sentence_count",
+      "title": "sentence_count distribution by rank bucket",
+      "file_name": "violin_sentence_count.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_3a4b30c5cbd0793e\\violin_sentence_count.png"
+    },
+    {
+      "feature": "avg_words_per_sentence",
+      "title": "avg_words_per_sentence distribution by rank bucket",
+      "file_name": "violin_avg_words_per_sentence.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_3a4b30c5cbd0793e\\violin_avg_words_per_sentence.png"
+    },
+    {
+      "feature": "avg_token_length",
+      "title": "avg_token_length distribution by rank bucket",
+      "file_name": "violin_avg_token_length.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_3a4b30c5cbd0793e\\violin_avg_token_length.png"
+    },
+    {
+      "feature": "syllable_count",
+      "title": "syllable_count distribution by rank bucket",
+      "file_name": "violin_syllable_count.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_3a4b30c5cbd0793e\\violin_syllable_count.png"
+    },
+    {
+      "feature": "avg_syllables_per_word",
+      "title": "avg_syllables_per_word distribution by rank bucket",
+      "file_name": "violin_avg_syllables_per_word.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_3a4b30c5cbd0793e\\violin_avg_syllables_per_word.png"
+    },
+    {
+      "feature": "flesch_kincaid_grade",
+      "title": "flesch_kincaid_grade distribution by rank bucket",
+      "file_name": "violin_flesch_kincaid_grade.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_3a4b30c5cbd0793e\\violin_flesch_kincaid_grade.png"
+    },
+    {
+      "feature": "gunning_fog_index",
+      "title": "gunning_fog_index distribution by rank bucket",
+      "file_name": "violin_gunning_fog_index.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_3a4b30c5cbd0793e\\violin_gunning_fog_index.png"
+    },
+    {
+      "feature": "lexical_density",
+      "title": "lexical_density distribution by rank bucket",
+      "file_name": "violin_lexical_density.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_3a4b30c5cbd0793e\\violin_lexical_density.png"
+    },
+    {
+      "feature": "lexical_diversity",
+      "title": "lexical_diversity distribution by rank bucket",
+      "file_name": "violin_lexical_diversity.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_3a4b30c5cbd0793e\\violin_lexical_diversity.png"
+    },
+    {
+      "feature": "sentiment_polarity",
+      "title": "sentiment_polarity distribution by rank bucket",
+      "file_name": "violin_sentiment_polarity.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_3a4b30c5cbd0793e\\violin_sentiment_polarity.png"
+    },
+    {
+      "feature": "entity_count",
+      "title": "entity_count distribution by rank bucket",
+      "file_name": "violin_entity_count.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_3a4b30c5cbd0793e\\violin_entity_count.png"
+    }
+  ],
+  "median_drop_summary": [
+    {
+      "feature": "gunning_fog_index",
+      "top_window_median": 12.289622119815668,
+      "comparison_median": 11.781331832381788,
+      "median_drop": 0.5082902874338799
+    },
+    {
+      "feature": "sentiment_polarity",
+      "top_window_median": 0.3182,
+      "comparison_median": 0.0,
+      "median_drop": 0.3182
+    },
+    {
+      "feature": "lexical_diversity",
+      "top_window_median": 0.3817991631799163,
+      "comparison_median": 0.2932598833441348,
+      "median_drop": 0.08853927983578153
+    },
+    {
+      "feature": "lexical_density",
+      "top_window_median": 0.6123630672926448,
+      "comparison_median": 0.6113744075829384,
+      "median_drop": 0.0009886597097064076
+    },
+    {
+      "feature": "avg_words_per_sentence",
+      "top_window_median": 20.110991379310345,
+      "comparison_median": 20.110991379310345,
+      "median_drop": 0.0
+    },
+    {
+      "feature": "avg_syllables_per_word",
+      "top_window_median": 1.641025641025641,
+      "comparison_median": 1.6448169460428654,
+      "median_drop": -0.0037913050172244667
+    },
+    {
+      "feature": "avg_token_length",
+      "top_window_median": 6.171428571428572,
+      "comparison_median": 6.2584823202224875,
+      "median_drop": -0.08705374879391581
+    },
+    {
+      "feature": "flesch_kincaid_grade",
+      "top_window_median": 11.560005076142133,
+      "comparison_median": 12.285507494816084,
+      "median_drop": -0.7255024186739512
+    },
+    {
+      "feature": "sentence_count",
+      "top_window_median": 82.0,
+      "comparison_median": 182.0,
+      "median_drop": -100.0
+    },
+    {
+      "feature": "entity_count",
+      "top_window_median": 191.0,
+      "comparison_median": 460.0,
+      "median_drop": -269.0
+    },
+    {
+      "feature": "token_count",
+      "top_window_median": 1084.0,
+      "comparison_median": 2287.0,
+      "median_drop": -1203.0
+    },
+    {
+      "feature": "word_count",
+      "top_window_median": 1697.0,
+      "comparison_median": 3836.0,
+      "median_drop": -2139.0
+    },
+    {
+      "feature": "syllable_count",
+      "top_window_median": 2729.0,
+      "comparison_median": 6327.0,
+      "median_drop": -3598.0
+    },
+    {
+      "feature": "non_whitespace_char_count",
+      "top_window_median": 8566.0,
+      "comparison_median": 19660.0,
+      "median_drop": -11094.0
+    },
+    {
+      "feature": "char_count",
+      "top_window_median": 10392.0,
+      "comparison_median": 23976.0,
+      "median_drop": -13584.0
+    }
+  ]
+}

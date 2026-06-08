@@ -1,0 +1,290 @@
+{
+  "schema_version": 1,
+  "collection_key": "collection_79f7f0fb3b4a8f0a",
+  "cache_status": "generated",
+  "generated_at_utc": "2026-06-07T19:36:33+00:00",
+  "output_dir": "rankings\\per_model_rank_feature_plots\\collection_79f7f0fb3b4a8f0a",
+  "plot_kind": "violin",
+  "plot_kind_label": "Violin plots",
+  "selected_model": "bm25",
+  "selected_model_label": "BM25 only",
+  "query_ids": [
+    "q000001",
+    "q000002",
+    "q000003",
+    "q000004",
+    "q000005"
+  ],
+  "queries": [
+    {
+      "query_id": "q000001",
+      "query_text": "The most popular orange cat",
+      "query_slug": "the-most-popular-orange-cat",
+      "query_key": "the most popular orange cat",
+      "executed_at_utc": "2026-06-07T18:52:14Z",
+      "result_file": "rankings\\initial_rankings\\q000001_the-most-popular-orange-cat.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    },
+    {
+      "query_id": "q000002",
+      "query_text": "Calmest cat breeds",
+      "query_slug": "calmest-cat-breeds",
+      "query_key": "calmest cat breeds",
+      "executed_at_utc": "2026-06-07T18:52:29Z",
+      "result_file": "rankings\\initial_rankings\\q000002_calmest-cat-breeds.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    },
+    {
+      "query_id": "q000003",
+      "query_text": "Most expensive cats",
+      "query_slug": "most-expensive-cats",
+      "query_key": "most expensive cats",
+      "executed_at_utc": "2026-06-07T18:52:34Z",
+      "result_file": "rankings\\initial_rankings\\q000003_most-expensive-cats.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    },
+    {
+      "query_id": "q000004",
+      "query_text": "How long do cats live?",
+      "query_slug": "how-long-do-cats-live",
+      "query_key": "how long do cats live",
+      "executed_at_utc": "2026-06-07T18:52:41Z",
+      "result_file": "rankings\\initial_rankings\\q000004_how-long-do-cats-live.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    },
+    {
+      "query_id": "q000005",
+      "query_text": "What is the weirdest cat?",
+      "query_slug": "what-is-the-weirdest-cat",
+      "query_key": "what is the weirdest cat",
+      "executed_at_utc": "2026-06-07T18:52:48Z",
+      "result_file": "rankings\\initial_rankings\\q000005_what-is-the-weirdest-cat.parquet",
+      "stored_result_count": 21058,
+      "is_full_ranking": true,
+      "has_result_file": true
+    }
+  ],
+  "rank_window": {
+    "max_rank": 100,
+    "rolling_window": 50,
+    "center": true,
+    "min_periods": 10
+  },
+  "median_drop_window": {
+    "top_start": 1,
+    "top_end": 25,
+    "comparison_start": 76,
+    "comparison_end": 100
+  },
+  "row_count": 500,
+  "feature_count": 15,
+  "features": [
+    "char_count",
+    "non_whitespace_char_count",
+    "word_count",
+    "token_count",
+    "sentence_count",
+    "avg_words_per_sentence",
+    "avg_token_length",
+    "syllable_count",
+    "avg_syllables_per_word",
+    "flesch_kincaid_grade",
+    "gunning_fog_index",
+    "lexical_density",
+    "lexical_diversity",
+    "sentiment_polarity",
+    "entity_count"
+  ],
+  "plot_files": [
+    {
+      "feature": "char_count",
+      "title": "char_count distribution by rank bucket",
+      "file_name": "violin_char_count.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_79f7f0fb3b4a8f0a\\violin_char_count.png"
+    },
+    {
+      "feature": "non_whitespace_char_count",
+      "title": "non_whitespace_char_count distribution by rank bucket",
+      "file_name": "violin_non_whitespace_char_count.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_79f7f0fb3b4a8f0a\\violin_non_whitespace_char_count.png"
+    },
+    {
+      "feature": "word_count",
+      "title": "word_count distribution by rank bucket",
+      "file_name": "violin_word_count.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_79f7f0fb3b4a8f0a\\violin_word_count.png"
+    },
+    {
+      "feature": "token_count",
+      "title": "token_count distribution by rank bucket",
+      "file_name": "violin_token_count.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_79f7f0fb3b4a8f0a\\violin_token_count.png"
+    },
+    {
+      "feature": "sentence_count",
+      "title": "sentence_count distribution by rank bucket",
+      "file_name": "violin_sentence_count.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_79f7f0fb3b4a8f0a\\violin_sentence_count.png"
+    },
+    {
+      "feature": "avg_words_per_sentence",
+      "title": "avg_words_per_sentence distribution by rank bucket",
+      "file_name": "violin_avg_words_per_sentence.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_79f7f0fb3b4a8f0a\\violin_avg_words_per_sentence.png"
+    },
+    {
+      "feature": "avg_token_length",
+      "title": "avg_token_length distribution by rank bucket",
+      "file_name": "violin_avg_token_length.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_79f7f0fb3b4a8f0a\\violin_avg_token_length.png"
+    },
+    {
+      "feature": "syllable_count",
+      "title": "syllable_count distribution by rank bucket",
+      "file_name": "violin_syllable_count.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_79f7f0fb3b4a8f0a\\violin_syllable_count.png"
+    },
+    {
+      "feature": "avg_syllables_per_word",
+      "title": "avg_syllables_per_word distribution by rank bucket",
+      "file_name": "violin_avg_syllables_per_word.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_79f7f0fb3b4a8f0a\\violin_avg_syllables_per_word.png"
+    },
+    {
+      "feature": "flesch_kincaid_grade",
+      "title": "flesch_kincaid_grade distribution by rank bucket",
+      "file_name": "violin_flesch_kincaid_grade.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_79f7f0fb3b4a8f0a\\violin_flesch_kincaid_grade.png"
+    },
+    {
+      "feature": "gunning_fog_index",
+      "title": "gunning_fog_index distribution by rank bucket",
+      "file_name": "violin_gunning_fog_index.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_79f7f0fb3b4a8f0a\\violin_gunning_fog_index.png"
+    },
+    {
+      "feature": "lexical_density",
+      "title": "lexical_density distribution by rank bucket",
+      "file_name": "violin_lexical_density.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_79f7f0fb3b4a8f0a\\violin_lexical_density.png"
+    },
+    {
+      "feature": "lexical_diversity",
+      "title": "lexical_diversity distribution by rank bucket",
+      "file_name": "violin_lexical_diversity.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_79f7f0fb3b4a8f0a\\violin_lexical_diversity.png"
+    },
+    {
+      "feature": "sentiment_polarity",
+      "title": "sentiment_polarity distribution by rank bucket",
+      "file_name": "violin_sentiment_polarity.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_79f7f0fb3b4a8f0a\\violin_sentiment_polarity.png"
+    },
+    {
+      "feature": "entity_count",
+      "title": "entity_count distribution by rank bucket",
+      "file_name": "violin_entity_count.png",
+      "path": "rankings\\per_model_rank_feature_plots\\collection_79f7f0fb3b4a8f0a\\violin_entity_count.png"
+    }
+  ],
+  "median_drop_summary": [
+    {
+      "feature": "char_count",
+      "top_window_median": 10151.0,
+      "comparison_median": 7337.0,
+      "median_drop": 2814.0
+    },
+    {
+      "feature": "non_whitespace_char_count",
+      "top_window_median": 8444.0,
+      "comparison_median": 6131.0,
+      "median_drop": 2313.0
+    },
+    {
+      "feature": "syllable_count",
+      "top_window_median": 2784.0,
+      "comparison_median": 2052.0,
+      "median_drop": 732.0
+    },
+    {
+      "feature": "word_count",
+      "top_window_median": 1636.0,
+      "comparison_median": 1175.0,
+      "median_drop": 461.0
+    },
+    {
+      "feature": "token_count",
+      "top_window_median": 1048.0,
+      "comparison_median": 727.0,
+      "median_drop": 321.0
+    },
+    {
+      "feature": "entity_count",
+      "top_window_median": 136.0,
+      "comparison_median": 108.0,
+      "median_drop": 28.0
+    },
+    {
+      "feature": "sentence_count",
+      "top_window_median": 74.0,
+      "comparison_median": 55.0,
+      "median_drop": 19.0
+    },
+    {
+      "feature": "avg_words_per_sentence",
+      "top_window_median": 21.1,
+      "comparison_median": 20.555555555555557,
+      "median_drop": 0.5444444444444443
+    },
+    {
+      "feature": "flesch_kincaid_grade",
+      "top_window_median": 11.786814639283836,
+      "comparison_median": 11.621464790155901,
+      "median_drop": 0.16534984912793504
+    },
+    {
+      "feature": "avg_token_length",
+      "top_window_median": 6.244332493702771,
+      "comparison_median": 6.0872317973971155,
+      "median_drop": 0.1571006963056556
+    },
+    {
+      "feature": "sentiment_polarity",
+      "top_window_median": 0.9916,
+      "comparison_median": 0.9825,
+      "median_drop": 0.009099999999999997
+    },
+    {
+      "feature": "lexical_density",
+      "top_window_median": 0.5879593432369038,
+      "comparison_median": 0.5913426265590609,
+      "median_drop": -0.0033832833221570935
+    },
+    {
+      "feature": "avg_syllables_per_word",
+      "top_window_median": 1.6226961558715114,
+      "comparison_median": 1.6269113149847094,
+      "median_drop": -0.00421515911319803
+    },
+    {
+      "feature": "lexical_diversity",
+      "top_window_median": 0.3695906432748538,
+      "comparison_median": 0.3938260056127222,
+      "median_drop": -0.024235362337868382
+    },
+    {
+      "feature": "gunning_fog_index",
+      "top_window_median": 13.337344040651514,
+      "comparison_median": 13.41150743099788,
+      "median_drop": -0.07416339034636543
+    }
+  ]
+}
