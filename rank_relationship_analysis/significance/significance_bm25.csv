@@ -1,0 +1,17 @@
+model,feature,n_queries,mean_rho,std_rho,se,t,p_value,p_corrected,significant
+BM25,keyword_density,30,0.3592,0.102,0.0186,19.2867,0.0,0.0,True
+BM25,avg_words_per_sentence,30,-0.1996,0.0611,0.0112,-17.886,0.0,0.0,True
+BM25,distinct_entity_types,30,-0.3494,0.1142,0.0208,-16.7638,0.0,0.0,True
+BM25,lexical_density,30,0.082,0.0274,0.005,16.4011,0.0,0.0,True
+BM25,char_count_no_spaces,30,-0.3941,0.1325,0.0242,-16.287,0.0,0.0,True
+BM25,char_count,30,-0.3941,0.1327,0.0242,-16.2614,0.0,0.0,True
+BM25,word_count,30,-0.3959,0.1337,0.0244,-16.2221,0.0,0.0,True
+BM25,token_count,30,-0.3905,0.1346,0.0246,-15.8886,0.0,0.0,True
+BM25,sentence_count,30,-0.3793,0.1356,0.0248,-15.323,0.0,0.0,True
+BM25,named_entity_count,30,-0.3452,0.1276,0.0233,-14.8199,0.0,0.0,True
+BM25,lexical_diversity,30,0.3356,0.1314,0.024,13.9825,0.0,0.0,True
+BM25,gunning_fog_index,30,-0.1201,0.0482,0.0088,-13.6308,0.0,0.0,True
+BM25,most_frequent_entity_count,30,-0.2781,0.1245,0.0227,-12.2405,0.0,0.0,True
+BM25,avg_syllables_per_word,30,0.174,0.0898,0.0164,10.6167,0.0,0.0,True
+BM25,flesch_kincaid_grade,30,-0.0054,0.0413,0.0075,-0.7214,0.4764,0.4764,False
+BM25,sentiment_polarity,0,,,,,,,False
