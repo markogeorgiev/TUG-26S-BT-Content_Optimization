@@ -47,6 +47,8 @@ MODEL_FILES: Dict[str, str] = {
     "tfidf": "rankings_tfidf.csv",
     "sbert": "rankings_sbert.csv",
     "e5": "rankings_e5.csv",
+    "colbert": "rankings_colbert.csv",
+    "cross_encoder": "rankings_cross_encoder.csv",
 }
 
 # Columns in the feature file that are identifiers/labels, not features.

@@ -24,7 +24,7 @@ Can you keep a fish as a pet?
 How long do goldfish live? 
 Fish for medium-sized aquarium
 What do pet fish eat?
-Most ommon tropical fish 
+Most common tropical fish 
 
 # Birds
 Are birds good pets?

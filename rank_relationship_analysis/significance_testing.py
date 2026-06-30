@@ -52,6 +52,8 @@ MODELS: Dict[str, Tuple[str, str]] = {
     "tfidf": ("TF-IDF", "spearman_tfidf.csv"),
     "sbert": ("SBERT", "spearman_sbert.csv"),
     "e5": ("E5", "spearman_e5.csv"),
+    "colbert": ("ColBERT", "spearman_colbert.csv"),
+    "cross_encoder": ("Cross-Encoder", "spearman_cross_encoder.csv"),
 }
 
 # Columns that are not features in the per-query Spearman files.
@@ -101,7 +103,6 @@ def test_model(
 
     df = pd.DataFrame.from_records(records)
 
-    # Benjamini-Hochberg across the testable features only.
     df["p_corrected"] = np.nan
     df["significant"] = False
     testable = df["p_value"].notna()

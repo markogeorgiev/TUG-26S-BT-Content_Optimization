@@ -1,0 +1,11 @@
+query,article,model,old_rank,new_rank,rank_change,old_score,new_score,figure
+The most popular orange cat,Jorts (cat),TF-IDF,318,1,317,0.099297,0.433843,tfidf__the-most-popular-orange-cat__jorts-cat.png
+Best dogs for small apartments,Indian Spitz,TF-IDF,583,1,582,0.044516,0.331917,tfidf__best-dogs-for-small-apartments__indian-spitz.png
+Can you keep a fish as a pet?,Goldfish,SBERT,120,3,117,0.415154,0.516827,sbert__can-you-keep-a-fish-as-a-pet__goldfish.png
+Cheapest animal to own,Frogs in captivity,SBERT,100,1,99,0.343545,0.459039,sbert__cheapest-animal-to-own__frogs-in-captivity.png
+Pets that can live indoors full-time,Fancy rat,E5,24,3,21,0.784705,0.805092,e5__pets-that-can-live-indoors-full-time__fancy-rat.png
+Fish for medium-sized aquarium,Jack Dempsey (fish),E5,1545,131,1414,0.790988,0.810505,e5__fish-for-medium-sized-aquarium__jack-dempsey-fish.png
+Best pets for kids,Beagle,ColBERT,607,1,606,9.93104,16.542198,colbert__best-pets-for-kids__beagle.png
+Calmest cat breeds,Ragdoll,ColBERT,57,1,56,15.121069,19.048306,colbert__calmest-cat-breeds__ragdoll.png
+Best pets for students,Goldfish,Cross-Encoder,1626,1,1625,-7.290875,9.170403,cross_encoder__best-pets-for-students__goldfish.png
+Are birds good pets?,Conure,Cross-Encoder,496,1,495,-6.585336,9.250629,cross_encoder__are-birds-good-pets__conure.png

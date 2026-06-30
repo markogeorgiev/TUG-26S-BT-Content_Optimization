@@ -1,0 +1,17 @@
+model,feature,n_queries,mean_tau,std_tau,se,t,p_value,p_corrected,significant
+SBERT,avg_words_per_sentence,30,0.081,0.0501,0.0092,8.8455,0.0,0.0,True
+SBERT,keyword_density,30,-0.1077,0.0672,0.0123,-8.7773,0.0,0.0,True
+SBERT,distinct_entity_types,30,0.1525,0.1029,0.0188,8.1191,0.0,0.0,True
+SBERT,named_entity_count,30,0.1747,0.1204,0.022,7.9464,0.0,0.0,True
+SBERT,most_frequent_entity_count,30,0.1753,0.1256,0.0229,7.6435,0.0,0.0,True
+SBERT,char_count_no_spaces,30,0.1449,0.1137,0.0208,6.9798,0.0,0.0,True
+SBERT,char_count,30,0.1452,0.1141,0.0208,6.9708,0.0,0.0,True
+SBERT,word_count,30,0.1452,0.1161,0.0212,6.8532,0.0,0.0,True
+SBERT,token_count,30,0.15,0.12,0.0219,6.8451,0.0,0.0,True
+SBERT,lexical_diversity,30,-0.1599,0.1317,0.0241,-6.6489,0.0,0.0,True
+SBERT,sentence_count,30,0.1459,0.1226,0.0224,6.5194,0.0,0.0,True
+SBERT,gunning_fog_index,30,-0.0294,0.0376,0.0069,-4.2764,0.0002,0.0002,True
+SBERT,avg_syllables_per_word,30,-0.0965,0.1298,0.0237,-4.0725,0.0003,0.0004,True
+SBERT,lexical_density,30,0.0243,0.0383,0.007,3.4826,0.0016,0.0017,True
+SBERT,flesch_kincaid_grade,30,-0.0234,0.0752,0.0137,-1.704,0.0991,0.0991,False
+SBERT,sentiment_polarity,0,,,,,,,False

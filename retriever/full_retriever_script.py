@@ -1,20 +1,27 @@
 """
 Full retrieval / ranking pipeline for the pets corpus.
 
-Ranks every document in the corpus against every query for four models:
+Ranks every document in the corpus against every query for the models below.
+The first four are the default ("all") set; the two rerankers are heavy and
+therefore OPT-IN (selected explicitly with --model), never part of "all":
 
-    bm25   - sparse lexical          (bm25s)
-    tfidf  - sparse lexical          (scikit-learn)
-    sbert  - dense bi-encoder        (sentence-transformers/all-MiniLM-L6-v2)
-    e5     - dense bi-encoder        (intfloat/e5-base-v2)
+    bm25           - sparse lexical          (bm25s)
+    tfidf          - sparse lexical          (scikit-learn)
+    sbert          - dense bi-encoder        (sentence-transformers/all-MiniLM-L6-v2)
+    e5             - dense bi-encoder        (intfloat/e5-base-v2)
+    cross_encoder  - cross-encoder reranker  (cross-encoder/ms-marco-MiniLM-L-6-v2)  [opt-in]
+    colbert        - late-interaction        (colbert-ir/colbertv2.0; transformers+torch)  [opt-in]
 
 The expensive artefacts are cached under ``retriever/cache`` so the heavy
 work only ever runs ONCE for the whole project:
 
-    * bm25  -> the built BM25 index (bm25s native save format)
-    * tfidf -> the fitted vectorizer (pickle) + the doc-term matrix (npz)
-    * sbert -> L2-normalised corpus embeddings (.npy)
-    * e5    -> L2-normalised corpus embeddings (.npy)
+    * bm25          -> the built BM25 index (bm25s native save format)
+    * tfidf         -> the fitted vectorizer (pickle) + the doc-term matrix (npz)
+    * sbert         -> L2-normalised corpus embeddings (.npy)
+    * e5            -> L2-normalised corpus embeddings (.npy)
+    * cross_encoder -> the full query x doc score matrix (.npy)  (no embeddings exist
+                       for a cross-encoder; the joint scores are what gets reused)
+    * colbert       -> the per-document multi-vector embeddings (.npy, object array)
 
 On a second run every model loads its cache and only the (cheap) query side
 plus the scoring is recomputed.
@@ -31,6 +38,10 @@ Usage
     # or a single model
     python retriever/full_retriever_script.py --model bm25
 
+    # the opt-in rerankers (run only these; not included in "all")
+    python retriever/full_retriever_script.py --model cross_encoder
+    python retriever/full_retriever_script.py --model colbert    # uses only transformers + torch
+
 Configuration is read from environment variables (optionally a .env file);
 sensible project-relative defaults are used when they are not set.
 """
@@ -40,6 +51,7 @@ import json
 import os
 import pickle
 import re
+import string
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -99,6 +111,29 @@ EMBED_BATCH_SIZE = int(os.getenv("EMBED_BATCH_SIZE", "256"))
 
 SBERT_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 E5_MODEL = "intfloat/e5-base-v2"
+
+# Cross-encoder reranker. It scores (query, doc) pairs jointly, so there are no
+# reusable per-doc embeddings; what we cache is the full score matrix instead.
+# (canonical HF id uses dashes: ms-marco-MiniLM-L-6-v2)
+CROSS_ENCODER_MODEL = os.getenv(
+    "CROSS_ENCODER_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2"
+)
+CE_BATCH_SIZE = int(os.getenv("CE_BATCH_SIZE", "64"))
+
+# ColBERT late-interaction model (multi-vector). Implemented directly on
+# transformers + torch (NO pylate / colbert package): a BERT encoder plus
+# ColBERT's 128-dim linear projection, scored with MaxSim. Each document becomes
+# one matrix of L2-normalised token vectors; docs are scored against each query
+# in chunks to bound memory on the full corpus.
+COLBERT_MODEL = os.getenv("COLBERT_MODEL", "colbert-ir/colbertv2.0")
+COLBERT_DIM = 128
+COLBERT_QUERY_MAXLEN = int(os.getenv("COLBERT_QUERY_MAXLEN", "32"))
+COLBERT_DOC_MAXLEN = int(os.getenv("COLBERT_DOC_MAXLEN", "220"))
+COLBERT_CHUNK = int(os.getenv("COLBERT_CHUNK", "4096"))
+
+# Set from --limit in main(); guards the heavy caches from being overwritten
+# with a partial (smoke-test) corpus.
+_LIMITED = False
 
 # ``Foo_Bar_1a2b3c4d5e.txt`` -> the trailing 10-hex-char content hash.
 _HASH_SUFFIX = re.compile(r"_[0-9a-fA-F]{8,}$")
@@ -376,6 +411,245 @@ def run_e5(docs: Dict[str, str], query_ids: List[str], queries: List[str]):
 
 
 # --------------------------------------------------------------------------- #
+# Cross-encoder reranker - cached as the full query x doc score matrix
+# --------------------------------------------------------------------------- #
+def _load_or_build_ce_scores(
+    query_ids: List[str],
+    queries: List[str],
+    doc_ids: List[str],
+    texts: List[str],
+    cache_file: Path,
+) -> np.ndarray:
+    """Return a (n_queries x n_docs) matrix of cross-encoder scores.
+
+    A cross-encoder has no standalone document embeddings - the score only
+    exists for a (query, document) pair - so the reusable artefact is the score
+    matrix itself. The cache is only trusted when its shape matches the current
+    corpus/queries, and only written for a full (non --limit) run.
+    """
+    expected = (len(query_ids), len(doc_ids))
+    if cache_file.exists():
+        scores = np.load(cache_file)
+        if scores.shape == expected:
+            print(f"[cross_encoder] loading cached scores ({cache_file.name})")
+            return scores
+        print(f"[cross_encoder] cached scores shape {scores.shape} != {expected}; "
+              "recomputing")
+
+    from sentence_transformers import CrossEncoder
+
+    print(f"[cross_encoder] scoring {expected[0]} queries x {expected[1]} docs "
+          f"with {CROSS_ENCODER_MODEL} on {DEVICE}")
+    ce = CrossEncoder(CROSS_ENCODER_MODEL, device=DEVICE, max_length=512)
+
+    scores = np.empty(expected, dtype=np.float32)
+    for qi, query in enumerate(tqdm(queries, desc="scoring cross_encoder", unit="q")):
+        pairs = [[query, text] for text in texts]
+        preds = ce.predict(pairs, batch_size=CE_BATCH_SIZE, show_progress_bar=False)
+        scores[qi] = np.asarray(preds, dtype=np.float32)
+
+    if not _LIMITED:
+        np.save(cache_file, scores)
+        print(f"[cross_encoder] cached scores -> {cache_file.name}")
+    return scores
+
+
+def run_cross_encoder(docs: Dict[str, str], query_ids: List[str], queries: List[str]):
+    doc_ids = list(docs.keys())
+    texts = list(docs.values())
+
+    scores = _load_or_build_ce_scores(
+        query_ids, queries, doc_ids, texts, CACHE_DIR / "cross_encoder_scores.npy"
+    )
+
+    out: List[Result] = []
+    for qi, query_id in enumerate(query_ids):
+        out.extend(parse_results("cross_encoder", query_id, scores[qi], doc_ids))
+    return out
+
+
+# --------------------------------------------------------------------------- #
+# ColBERT (late interaction) - implemented directly on transformers + torch
+#
+# ColBERTv2 = a BERT encoder + a linear projection to 128 dims, scored with
+# MaxSim over per-token vectors. We reproduce the official recipe without the
+# `colbert` / `pylate` packages, so nothing in the environment changes:
+#   * query : "[CLS] [Q] <query> ..." padded to QUERY_MAXLEN with [MASK]
+#             (ColBERT "mask augmentation"); every token vector is kept.
+#   * doc   : "[CLS] [D] <doc> ..." truncated to DOC_MAXLEN; padding and
+#             punctuation token vectors are dropped.
+#   * vectors are L2-normalised; score(q, d) = sum_i max_j (q_i . d_j).
+# --------------------------------------------------------------------------- #
+class _ColBERT:
+    """Minimal ColBERTv2 encoder: BERT backbone + 128-dim projection head."""
+
+    def __init__(self, model_name: str):
+        from transformers import AutoModel, AutoTokenizer
+
+        self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+        self.bert = AutoModel.from_pretrained(model_name).to(DEVICE).eval()
+        self.linear = self._load_projection(model_name).to(DEVICE)  # (DIM, 768)
+
+        # Marker tokens inserted right after [CLS]: [Q]=[unused0], [D]=[unused1].
+        self.q_marker_id = self.tokenizer.convert_tokens_to_ids("[unused0]")
+        self.d_marker_id = self.tokenizer.convert_tokens_to_ids("[unused1]")
+        self.mask_id = self.tokenizer.mask_token_id
+        self.pad_id = self.tokenizer.pad_token_id
+        # Documents drop punctuation token vectors (ColBERT skiplist).
+        self.skiplist = {
+            self.tokenizer.convert_tokens_to_ids(sym) for sym in string.punctuation
+        }
+
+        if DEVICE == "cuda":
+            self.bert = self.bert.half()
+            self.linear = self.linear.half()
+
+    @staticmethod
+    def _load_projection(model_name: str) -> torch.Tensor:
+        """Pull ColBERT's ``linear.weight`` (128x768) out of the checkpoint.
+
+        AutoModel loads only the BERT backbone and silently drops the ColBERT
+        projection head, so we read that single tensor straight from the saved
+        weights file (safetensors first, then the legacy .bin).
+        """
+        from huggingface_hub import hf_hub_download
+
+        try:
+            from safetensors.torch import load_file
+
+            state = load_file(hf_hub_download(model_name, "model.safetensors"))
+        except Exception:
+            state = torch.load(
+                hf_hub_download(model_name, "pytorch_model.bin"), map_location="cpu"
+            )
+
+        for key, tensor in state.items():
+            if key.endswith("linear.weight"):
+                return tensor.float()
+        raise RuntimeError(
+            f"could not find ColBERT 'linear.weight' in {model_name} checkpoint"
+        )
+
+    def _project(self, ids: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
+        """ids/mask -> L2-normalised (B, T, DIM) token embeddings."""
+        hidden = self.bert(input_ids=ids, attention_mask=mask).last_hidden_state
+        projected = hidden @ self.linear.T
+        return torch.nn.functional.normalize(projected, p=2, dim=2)
+
+    @torch.inference_mode()
+    def encode_queries(self, queries: List[str]) -> torch.Tensor:
+        """(Nq, QUERY_MAXLEN, DIM) on DEVICE; all token vectors kept."""
+        # Prepend ". " so position 1 is free to hold the [Q] marker.
+        enc = self.tokenizer(
+            [". " + q for q in queries],
+            padding="max_length",
+            truncation=True,
+            max_length=COLBERT_QUERY_MAXLEN,
+            return_tensors="pt",
+        )
+        ids = enc["input_ids"]
+        ids[:, 1] = self.q_marker_id
+        ids[ids == self.pad_id] = self.mask_id           # mask augmentation
+        ids = ids.to(DEVICE)
+        mask = torch.ones_like(ids)                      # attend over the full query
+        return self._project(ids, mask).float()
+
+    @torch.inference_mode()
+    def encode_documents(self, texts: List[str]) -> List[np.ndarray]:
+        """One (Ld_i, DIM) float16 array per doc; padding + punctuation dropped."""
+        embeddings: List[np.ndarray] = []
+        for start in tqdm(
+            range(0, len(texts), EMBED_BATCH_SIZE), desc="encoding colbert", unit="batch"
+        ):
+            enc = self.tokenizer(
+                [". " + t for t in texts[start:start + EMBED_BATCH_SIZE]],
+                padding=True,
+                truncation=True,
+                max_length=COLBERT_DOC_MAXLEN,
+                return_tensors="pt",
+            )
+            ids = enc["input_ids"]
+            ids[:, 1] = self.d_marker_id
+            ids, mask = ids.to(DEVICE), enc["attention_mask"].to(DEVICE)
+
+            emb = self._project(ids, mask)               # (B, T, DIM)
+
+            # Keep only real, non-punctuation token vectors per document.
+            keep = mask.bool()
+            for sym_id in self.skiplist:
+                keep &= ids != sym_id
+            keep_cpu = keep.cpu().numpy()
+            emb_cpu = emb.half().cpu().numpy()
+            for row in range(emb_cpu.shape[0]):
+                embeddings.append(emb_cpu[row][keep_cpu[row]])
+        return embeddings
+
+
+def _load_or_build_colbert_embeddings(
+    encoder: "_ColBERT", texts: List[str], cache_file: Path
+) -> List[np.ndarray]:
+    """Per-document multi-vector embeddings, cached as a numpy object array."""
+    if cache_file.exists():
+        cached = np.load(cache_file, allow_pickle=True)
+        if len(cached) == len(texts):
+            print(f"[colbert] loading cached doc embeddings ({cache_file.name})")
+            return list(cached)
+        print(f"[colbert] cached embedding count {len(cached)} != {len(texts)}; "
+              "re-encoding")
+
+    print(f"[colbert] encoding {len(texts)} docs with {COLBERT_MODEL} on {DEVICE}")
+    emb = encoder.encode_documents(texts)
+    if not _LIMITED:
+        np.save(cache_file, np.array(emb, dtype=object), allow_pickle=True)
+        print(f"[colbert] cached doc embeddings -> {cache_file.name}")
+    return emb
+
+
+def _colbert_maxsim_scores(
+    query_emb: torch.Tensor,          # (Lq, DIM) on DEVICE
+    doc_emb_chunk: List[np.ndarray],  # list of (Ld_i, DIM)
+) -> np.ndarray:
+    """MaxSim of one query against a chunk of docs -> (len(chunk),) scores."""
+    n = len(doc_emb_chunk)
+    max_len = max(d.shape[0] for d in doc_emb_chunk)
+
+    padded = torch.zeros((n, max_len, COLBERT_DIM), dtype=query_emb.dtype, device=DEVICE)
+    valid = torch.zeros((n, max_len), dtype=torch.bool, device=DEVICE)
+    for i, d in enumerate(doc_emb_chunk):
+        ld = d.shape[0]
+        padded[i, :ld] = torch.from_numpy(d).to(DEVICE, query_emb.dtype)
+        valid[i, :ld] = True
+
+    # sim[n, q, t] = query token q . doc token t
+    sim = torch.einsum("qd,ntd->nqt", query_emb, padded)
+    sim = sim.masked_fill(~valid.unsqueeze(1), float("-inf"))
+    scores = sim.max(dim=2).values.sum(dim=1)  # max over doc tokens, sum over query
+    return scores.float().cpu().numpy()
+
+
+def run_colbert(docs: Dict[str, str], query_ids: List[str], queries: List[str]):
+    doc_ids = list(docs.keys())
+    texts = list(docs.values())
+
+    encoder = _ColBERT(COLBERT_MODEL)
+    doc_emb = _load_or_build_colbert_embeddings(
+        encoder, texts, CACHE_DIR / "colbert_corpus.npy"
+    )
+    query_emb = encoder.encode_queries(queries)  # (Nq, Lq, DIM) on DEVICE
+
+    out: List[Result] = []
+    with torch.inference_mode():
+        for qi, query_id in enumerate(tqdm(query_ids, desc="scoring colbert", unit="q")):
+            scores = np.empty(len(doc_ids), dtype=np.float32)
+            qe = query_emb[qi]
+            for start in range(0, len(doc_ids), COLBERT_CHUNK):
+                chunk = doc_emb[start:start + COLBERT_CHUNK]
+                scores[start:start + len(chunk)] = _colbert_maxsim_scores(qe, chunk)
+            out.extend(parse_results("colbert", query_id, scores, doc_ids))
+    return out
+
+
+# --------------------------------------------------------------------------- #
 # Output
 # --------------------------------------------------------------------------- #
 def save_results(model: str, results: List[Result]):
@@ -390,7 +664,12 @@ RUNNERS = {
     "tfidf": run_tfidf,
     "sbert": run_sbert,
     "e5": run_e5,
+    "cross_encoder": run_cross_encoder,
+    "colbert": run_colbert,
 }
+
+# "all" runs only the four light models; the rerankers are heavy and opt-in.
+DEFAULT_MODELS = ["bm25", "tfidf", "sbert", "e5"]
 
 
 def main():
@@ -398,8 +677,9 @@ def main():
     parser.add_argument(
         "--model",
         default="all",
-        choices=["all", "bm25", "tfidf", "sbert", "e5"],
-        help="model to run (default: all four)",
+        choices=["all"] + list(RUNNERS),
+        help="model to run. 'all' = bm25/tfidf/sbert/e5; cross_encoder and "
+             "colbert are heavy and must be selected explicitly.",
     )
     parser.add_argument(
         "--limit",
@@ -408,6 +688,9 @@ def main():
         help="only load the first N documents (smoke test; do NOT use for the real run)",
     )
     args = parser.parse_args()
+
+    global _LIMITED
+    _LIMITED = args.limit is not None
 
     print(f"device          : {DEVICE}")
     print(f"corpus dir      : {CORPUS_DIR}")
@@ -419,7 +702,7 @@ def main():
     docs = load_corpus(CORPUS_DIR, limit=args.limit)
     print(f"loaded {len(docs):,} documents, {len(queries)} queries")
 
-    models = list(RUNNERS) if args.model == "all" else [args.model]
+    models = DEFAULT_MODELS if args.model == "all" else [args.model]
     for model in models:
         t0 = time.time()
         print(f"\n=== {model} ===")

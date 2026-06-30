@@ -1,0 +1,17 @@
+model,feature,n_queries,mean_rho,std_rho,se,t,p_value,p_corrected,significant
+Cross-Encoder,lexical_density,30,0.1795,0.0314,0.0057,31.3077,0.0,0.0,True
+Cross-Encoder,gunning_fog_index,30,-0.1993,0.0523,0.0096,-20.8566,0.0,0.0,True
+Cross-Encoder,avg_words_per_sentence,30,-0.2664,0.1134,0.0207,-12.8646,0.0,0.0,True
+Cross-Encoder,keyword_density,30,0.3856,0.1765,0.0322,11.9644,0.0,0.0,True
+Cross-Encoder,distinct_entity_types,30,-0.3805,0.2044,0.0373,-10.1995,0.0,0.0,True
+Cross-Encoder,char_count_no_spaces,30,-0.4041,0.2392,0.0437,-9.2523,0.0,0.0,True
+Cross-Encoder,char_count,30,-0.4039,0.2396,0.0437,-9.2333,0.0,0.0,True
+Cross-Encoder,word_count,30,-0.4036,0.2415,0.0441,-9.1527,0.0,0.0,True
+Cross-Encoder,token_count,30,-0.3948,0.244,0.0445,-8.8624,0.0,0.0,True
+Cross-Encoder,sentence_count,30,-0.379,0.2454,0.0448,-8.459,0.0,0.0,True
+Cross-Encoder,named_entity_count,30,-0.3571,0.2316,0.0423,-8.4455,0.0,0.0,True
+Cross-Encoder,lexical_diversity,30,0.3164,0.2438,0.0445,7.108,0.0,0.0,True
+Cross-Encoder,most_frequent_entity_count,30,-0.2563,0.227,0.0415,-6.1835,0.0,0.0,True
+Cross-Encoder,avg_syllables_per_word,30,0.2013,0.1848,0.0337,5.9671,0.0,0.0,True
+Cross-Encoder,flesch_kincaid_grade,30,-0.0231,0.0819,0.015,-1.5455,0.1331,0.1331,False
+Cross-Encoder,sentiment_polarity,0,,,,,,,False
